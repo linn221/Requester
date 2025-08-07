@@ -1,7 +1,6 @@
-package har
+package requests
 
-import ()
-
+// AI generated struct
 type HAR struct {
 	Log struct {
 		Entries []struct {

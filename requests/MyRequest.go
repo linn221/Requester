@@ -2,20 +2,30 @@ package requests
 
 import (
 	"encoding/json"
-	"io/ioutil"
-	"linn221/Requester/har"
+	"fmt"
+	"linn221/Requester/utils"
 	"net/url"
 )
 
 type MyRequest struct {
-	Seq        int
-	URL        string
-	Domain     string
+	Sequence int
+	URL      string
+	Method   string
+	Domain   string
+
 	ReqHeaders []Header
 	ReqBody    string
+
+	ResStatus  int
 	ResHeaders []Header
 	ResBody    string
+	RespSize   int
 	LatencyMs  int64
+
+	ReqHash      string
+	ResBodyHash  string
+	ResTotalHash string
+	RequestTime  string
 }
 
 type Header struct {
@@ -23,14 +33,10 @@ type Header struct {
 	Value string
 }
 
-func ParseHAR(path string) ([]MyRequest, error) {
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
+func ParseHAR(bs []byte, hashFunc func(*MyRequest) string) ([]MyRequest, error) {
 
-	var har har.HAR
-	if err := json.Unmarshal(data, &har); err != nil {
+	var har HAR
+	if err := json.Unmarshal(bs, &har); err != nil {
 		return nil, err
 	}
 
@@ -63,15 +69,27 @@ func ParseHAR(path string) ([]MyRequest, error) {
 		// }
 
 		my := MyRequest{
-			Seq:        i + 1,
-			URL:        entry.Request.URL,
-			Domain:     domain,
-			ReqHeaders: reqHeaders,
-			ReqBody:    entry.Request.PostData.Text,
-			ResHeaders: resHeaders,
-			ResBody:    resBody,
-			LatencyMs:  int64(entry.Time),
+			Sequence:    i + 1,
+			URL:         entry.Request.URL,
+			Domain:      domain,
+			ReqHeaders:  reqHeaders,
+			ReqBody:     entry.Request.PostData.Text,
+			ResHeaders:  resHeaders,
+			ResStatus:   entry.Response.Status,
+			ResBody:     resBody,
+			RespSize:    len(resBody),
+			LatencyMs:   int64(entry.Time),
+			RequestTime: entry.StartedDateTime,
+			Method:      entry.Request.Method,
 		}
+
+		requestHash := utils.HashString(fmt.Sprintf("%s %s %s", my.URL, my.Method, my.ReqBody))
+		responseBodyHash := utils.HashString(my.ResBody)
+		responseTotalHash := utils.HashString(hashFunc(&my))
+
+		my.ReqHash = requestHash
+		my.ResBodyHash = responseBodyHash
+		my.ResTotalHash = responseTotalHash
 		result = append(result, my)
 	}
 

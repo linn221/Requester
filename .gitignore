@@ -1,3 +1,5 @@
 .vscode
 .env
 *.har
+Requester
+__debug*
