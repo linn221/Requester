@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"linn221/Requester/utils"
 	"net/url"
+	"strings"
 )
 
 type MyRequest struct {
@@ -13,19 +14,61 @@ type MyRequest struct {
 	Method   string
 	Domain   string
 
-	ReqHeaders []Header
+	ReqHeaders HeaderSlice
 	ReqBody    string
 
 	ResStatus  int
-	ResHeaders []Header
+	ResHeaders HeaderSlice
 	ResBody    string
 	RespSize   int
 	LatencyMs  int64
 
-	ReqHash      string
-	ResBodyHash  string
-	ResTotalHash string
-	RequestTime  string
+	RequestTime string
+	// hashes
+	ReqHash1    string // hash raw request
+	ReqHash     string
+	ResHash     string
+	ResBodyHash string
+}
+
+type HeaderSlice []Header
+
+func (hs HeaderSlice) EchoAll() string {
+	var result string
+	for _, h := range hs {
+		result += fmt.Sprintf("%s: %s\n", h.Name, h.Value)
+	}
+	return result
+}
+
+func (hs HeaderSlice) EchoMatcher(headerNames ...string) string {
+	matchMap := make(map[string]struct{}, len(headerNames))
+	for _, hname := range headerNames {
+		matchMap[strings.ToLower(hname)] = struct{}{}
+	}
+
+	var result string
+	for _, h := range hs {
+		if _, match := matchMap[strings.ToLower(h.Name)]; match {
+			result += fmt.Sprintf("%s: %s\n", h.Name, h.Value)
+		}
+	}
+	return result
+}
+
+func (hs HeaderSlice) EchoFilter(headerNames ...string) string {
+	filterMap := make(map[string]struct{}, len(headerNames))
+	for _, hname := range headerNames {
+		filterMap[strings.ToLower(hname)] = struct{}{}
+	}
+
+	var result string
+	for _, h := range hs {
+		if _, filter := filterMap[strings.ToLower(h.Name)]; !filter {
+			result += fmt.Sprintf("%s: %s\n", h.Name, h.Value)
+		}
+	}
+	return result
 }
 
 type Header struct {
@@ -33,7 +76,17 @@ type Header struct {
 	Value string
 }
 
-func ParseHAR(bs []byte, hashFunc func(*MyRequest) string) ([]MyRequest, error) {
+func (h Header) String() string {
+	return fmt.Sprintf("%s: %s\n", h.Name, h.Value)
+}
+
+func (r MyRequest) requestText() string {
+
+	raw := r.Method + " " + r.URL + " " + r.ReqBody + " " + r.ReqHeaders.EchoAll()
+	return raw
+}
+
+func ParseHAR(bs []byte, resHashFunc func(*MyRequest) (string, string)) ([]MyRequest, error) {
 
 	var har HAR
 	if err := json.Unmarshal(bs, &har); err != nil {
@@ -83,13 +136,13 @@ func ParseHAR(bs []byte, hashFunc func(*MyRequest) string) ([]MyRequest, error) 
 			Method:      entry.Request.Method,
 		}
 
-		requestHash := utils.HashString(fmt.Sprintf("%s %s %s", my.URL, my.Method, my.ReqBody))
-		responseBodyHash := utils.HashString(my.ResBody)
-		responseTotalHash := utils.HashString(hashFunc(&my))
+		requestText, responseText := resHashFunc(&my)
 
-		my.ReqHash = requestHash
-		my.ResBodyHash = responseBodyHash
-		my.ResTotalHash = responseTotalHash
+		my.ReqHash = utils.HashString(requestText)
+		my.ResHash = utils.HashString(responseText)
+		my.ResBodyHash = utils.HashString(my.ResBody)
+		my.ReqHash1 = utils.HashString(my.requestText())
+
 		result = append(result, my)
 	}
 
