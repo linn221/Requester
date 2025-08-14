@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"net"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -149,4 +151,9 @@ func GetLocalDate(timezone string) (time.Time, error) {
 	}
 	localNow := time.Now().In(loc)
 	return time.Date(localNow.Year(), localNow.Month(), localNow.Day(), 0, 0, 0, 0, time.UTC), nil
+}
+
+func GetBaseDir() string {
+	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	return dir
 }
