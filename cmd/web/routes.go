@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"linn221/Requester/views"
 	"log"
 	"net/http"
 	"runtime/debug"
@@ -44,13 +45,20 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 	})
 }
 
+func makeDashboardRoutes(app *App, mux *http.ServeMux) {
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		app.templates.HomePage(w)
+	})
+	mux.HandleFunc("GET /import", app.HandleMin(func(v *views.MyTemplates, w http.ResponseWriter, r *http.Request) error {
+		return v.ShowImportForm(w)
+	}))
+}
+
 func (a *App) Serve() {
 	mux := http.NewServeMux()
 	authMux := http.NewServeMux()
 	authMiddleware := MakeAuthMiddleware(a.secret)
-	authMux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("hell oworld!"))
-	})
+	makeDashboardRoutes(a, authMux)
 
 	mux.HandleFunc("GET /start-session", func(w http.ResponseWriter, r *http.Request) {
 		s := r.URL.Query().Get("secret")
