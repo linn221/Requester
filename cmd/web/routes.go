@@ -1,7 +1,6 @@
 package main
 
 import (
-	"strconv"
 	"fmt"
 	"io"
 	"linn221/Requester/requests"
@@ -9,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"runtime/debug"
+	"strconv"
 	"strings"
 )
 
@@ -50,18 +50,38 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 }
 
 func makeDashboardRoutes(app *App, mux *http.ServeMux) {
+	// Home page - check if it's an HTMX request
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		views.HomePage().Render(r.Context(), w)
+		if r.Header.Get("HX-Request") == "true" {
+			// HTMX request - return just the content
+			views.HomePage().Render(r.Context(), w)
+		} else {
+			// Direct visit - return full page with layout
+			views.Layout("Home - App", views.HomePage()).Render(r.Context(), w)
+		}
 	})
+
+	// Import form - check if it's an HTMX request
 	mux.HandleFunc("GET /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
-		return views.ImportForm().Render(r.Context(), w)
+		if r.Header.Get("HX-Request") == "true" {
+			// HTMX request - return just the form
+			return views.ImportForm().Render(r.Context(), w)
+		} else {
+			// Direct visit - return full page with layout
+			return views.ImportFormPage().Render(r.Context(), w)
+		}
 	}))
+
 	mux.HandleFunc("POST /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
 		return handleImport(app, w, r)
 	}))
+
+	// Requests list - check if it's an HTMX request
 	mux.HandleFunc("GET /requests/{importJobId}", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
 		return handleRequestsList(app, w, r)
 	}))
+
+	// Request detail - check if it's an HTMX request
 	mux.HandleFunc("GET /requests/detail/{id}", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
 		return handleRequestDetail(app, w, r)
 	}))
@@ -166,8 +186,14 @@ func handleImport(app *App, w http.ResponseWriter, r *http.Request) error {
 	// Generate summary
 	summary := generateImportSummary(tempResults, title)
 
-	// Render success response
-	return views.ImportResult(title, len(tempResults), countUniqueDomains(tempResults), summary, importJob.ID).Render(r.Context(), w)
+	// Check if it's an HTMX request
+	if r.Header.Get("HX-Request") == "true" {
+		// HTMX request - return just the content
+		return views.ImportResult(title, len(tempResults), countUniqueDomains(tempResults), summary, importJob.ID).Render(r.Context(), w)
+	} else {
+		// Direct visit - return full page with layout
+		return views.ImportResultPage(title, len(tempResults), countUniqueDomains(tempResults), summary, importJob.ID).Render(r.Context(), w)
+	}
 }
 
 func generateImportSummary(results []requests.TempMyRequest, title string) string {
@@ -234,8 +260,14 @@ func handleRequestsList(app *App, w http.ResponseWriter, r *http.Request) error 
 		return fmt.Errorf("failed to fetch requests: %v", err)
 	}
 
-	// Render the requests list
-	return views.RequestsList(requests).Render(r.Context(), w)
+	// Check if it's an HTMX request
+	if r.Header.Get("HX-Request") == "true" {
+		// HTMX request - return just the content
+		return views.RequestsList(requests).Render(r.Context(), w)
+	} else {
+		// Direct visit - return full page with layout
+		return views.RequestsListPage(requests).Render(r.Context(), w)
+	}
 }
 
 func handleRequestDetail(app *App, w http.ResponseWriter, r *http.Request) error {
@@ -255,18 +287,24 @@ func handleRequestDetail(app *App, w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("failed to fetch request: %v", err)
 	}
 
-	// Render the request detail
-	return views.RequestDetail(request).Render(r.Context(), w)
+	// Check if it's an HTMX request
+	if r.Header.Get("HX-Request") == "true" {
+		// HTMX request - return just the content
+		return views.RequestDetail(request).Render(r.Context(), w)
+	} else {
+		// Direct visit - return full page with layout
+		return views.RequestDetailPage(request).Render(r.Context(), w)
+	}
 }
 
 func (a *App) Serve() {
 	mux := http.NewServeMux()
 	authMux := http.NewServeMux()
 	authMiddleware := MakeAuthMiddleware(a.secret)
-	
+
 	// Dashboard routes with authentication
 	makeDashboardRoutes(a, authMux)
-	
+
 	// Authentication routes
 	mux.HandleFunc("GET /start-session", func(w http.ResponseWriter, r *http.Request) {
 		s := r.URL.Query().Get("secret")
@@ -295,7 +333,7 @@ func (a *App) Serve() {
 
 	// Print the URL with secret for authentication
 	fmt.Printf("http://localhost:%s/start-session?secret=%s\n", a.port, a.secret)
-	
+
 	err := http.ListenAndServe(":"+a.port, RecoveryMiddleware(mux))
 	if err != nil {
 		log.Fatal(err)
