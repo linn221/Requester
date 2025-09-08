@@ -8,6 +8,9 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "linn221/Requester/requests"
+import "strconv"
+
 func HomePage() templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -29,7 +32,7 @@ func HomePage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>HTMX Navbar</title><!-- Bootstrap 5 CDN --><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\"><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js\"></script></head><body hx-target=\"#main\" hx-swap=\"innerHTML\"><nav class=\"navbar navbar-expand-lg bg-light border-bottom\"><div class=\"container-fluid\"><span class=\"navbar-brand\">App</span> <button class=\"navbar-toggler\" type=\"button\" data-bs-toggle=\"collapse\" data-bs-target=\"#navbarNav\" aria-controls=\"navbarNav\" aria-expanded=\"false\" aria-label=\"Toggle navigation\"><span class=\"navbar-toggler-icon\"></span></button><div class=\"collapse navbar-collapse\" id=\"navbarNav\"><div class=\"navbar-nav\"><button class=\"btn nav-link\" type=\"button\" hx-get=\"/dashboard/\">Home</button> <button class=\"btn nav-link\" type=\"button\" hx-get=\"/dashboard/import\">Import File</button> <button class=\"btn nav-link\" type=\"button\" hx-get=\"/dashboard/jobs\">Jobs</button> <button class=\"btn nav-link\" type=\"button\" hx-get=\"/dashboard/requests\">Requests</button> <button class=\"btn nav-link text-danger\" type=\"button\" hx-post=\"/logout\" hx-target=\"body\">Quit</button></div></div></div></nav><div id=\"main\" class=\"container\"><div id=\"flash\"></div></div><!-- Bootstrap JS (for responsive toggle) --><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js\"></script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>HTMX Navbar</title><!-- Bootstrap 5 CDN --><link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css\" rel=\"stylesheet\"><script src=\"https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js\"></script><script defer src=\"https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js\"></script><link rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css\"><style>\n\t\t\t\t.request-card {\n\t\t\t\t\ttransition: all 0.2s ease-in-out;\n\t\t\t\t\tborder: 1px solid #dee2e6;\n\t\t\t\t}\n\t\t\t\t.request-card:hover {\n\t\t\t\t\ttransform: translateY(-2px);\n\t\t\t\t\tbox-shadow: 0 4px 8px rgba(0,0,0,0.1);\n\t\t\t\t\tborder-color: #007bff;\n\t\t\t\t}\n\t\t\t\tpre {\n\t\t\t\t\tbackground-color: #f8f9fa;\n\t\t\t\t\tborder: 1px solid #e9ecef;\n\t\t\t\t\tborder-radius: 0.375rem;\n\t\t\t\t\tpadding: 1rem;\n\t\t\t\t}\n\t\t\t\t[x-cloak] {\n\t\t\t\t\tdisplay: none !important;\n\t\t\t\t}\n\t\t\t</style></head><body hx-target=\"#main\" hx-swap=\"innerHTML\"><nav class=\"navbar navbar-expand-lg bg-light border-bottom\"><div class=\"container-fluid\"><span class=\"navbar-brand\">App</span> <button class=\"navbar-toggler\" type=\"button\" data-bs-toggle=\"collapse\" data-bs-target=\"#navbarNav\" aria-controls=\"navbarNav\" aria-expanded=\"false\" aria-label=\"Toggle navigation\"><span class=\"navbar-toggler-icon\"></span></button><div class=\"collapse navbar-collapse\" id=\"navbarNav\"><div class=\"navbar-nav\"><button class=\"btn nav-link\" type=\"button\" hx-get=\"/dashboard/\">Home</button> <button class=\"btn nav-link\" type=\"button\" hx-get=\"/dashboard/import\">Import File</button> <button class=\"btn nav-link\" type=\"button\" hx-get=\"/dashboard/jobs\">Jobs</button> <button class=\"btn nav-link\" type=\"button\" hx-get=\"/dashboard/requests\">Requests</button> <button class=\"btn nav-link text-danger\" type=\"button\" hx-post=\"/logout\" hx-target=\"body\">Quit</button></div></div></div></nav><div id=\"main\" class=\"container\"><div id=\"flash\"></div></div><!-- Bootstrap JS (for responsive toggle) --><script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js\"></script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -95,7 +98,7 @@ func JobStatus(data JobStatusData) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs("/job-status/" + data.Id)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 62, Col: 62}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 87, Col: 62}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -108,7 +111,7 @@ func JobStatus(data JobStatusData) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(data.Percentage)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 63, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 88, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -157,7 +160,7 @@ func ErrorBox(message string) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 73, Col: 35}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 98, Col: 35}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -171,7 +174,7 @@ func ErrorBox(message string) templ.Component {
 	})
 }
 
-func ImportResult(title string, totalRequests int, uniqueDomains int, summary string) templ.Component {
+func ImportResult(title string, totalRequests int, uniqueDomains int, summary string, importJobId uint) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -199,7 +202,7 @@ func ImportResult(title string, totalRequests int, uniqueDomains int, summary st
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 81, Col: 36}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 106, Col: 36}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -212,7 +215,7 @@ func ImportResult(title string, totalRequests int, uniqueDomains int, summary st
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(totalRequests)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 82, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 107, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -225,7 +228,7 @@ func ImportResult(title string, totalRequests int, uniqueDomains int, summary st
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(uniqueDomains)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 83, Col: 53}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 108, Col: 53}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
@@ -238,13 +241,26 @@ func ImportResult(title string, totalRequests int, uniqueDomains int, summary st
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(summary)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 86, Col: 29}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 111, Col: 29}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</pre></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</pre><hr><div class=\"d-flex gap-2\"><a href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var13 templ.SafeURL
+		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs("/dashboard/requests/" + strconv.FormatUint(uint64(importJobId), 10))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates.templ`, Line: 114, Col: 81}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"btn btn-primary\"><i class=\"bi bi-list-ul\"></i> View Requests</a> <button class=\"btn btn-outline-secondary\" onclick=\"history.back()\"><i class=\"bi bi-arrow-left\"></i> Back to Import</button></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -257,6 +273,64 @@ type JobStatusData struct {
 	Success    bool
 	Id         string
 	Percentage int
+}
+
+func RequestsList(requests []requests.MyRequest) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var14 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var14 == nil {
+			templ_7745c5c3_Var14 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "<div x-data=\"requestsList()\" class=\"container-fluid\"><div class=\"row mb-4\"><div class=\"col-12\"><div class=\"d-flex justify-content-between align-items-center mb-3\"><h2>Requests</h2><span class=\"badge bg-secondary\" x-text=\"`${filteredRequests.length} of ${requests.length} requests`\"></span></div><div class=\"input-group\"><span class=\"input-group-text\"><i class=\"bi bi-search\"></i></span> <input type=\"text\" class=\"form-control\" placeholder=\"Search requests by URL, method, status, or domain...\" x-model=\"searchTerm\" @input=\"filterRequests()\"></div></div></div><div class=\"row\" x-show=\"filteredRequests.length === 0 && searchTerm\"><div class=\"col-12\"><div class=\"alert alert-info text-center\"><i class=\"bi bi-search\"></i> No requests found matching \"<span x-text=\"searchTerm\"></span>\"</div></div></div><div class=\"row\" x-show=\"filteredRequests.length > 0\"><template x-for=\"request in filteredRequests\" :key=\"request.id\"><div class=\"col-12 mb-3\"><div class=\"card request-card\" @click=\"viewRequest(request.id)\" style=\"cursor: pointer;\"><div class=\"card-body\"><div class=\"row align-items-center\"><div class=\"col-md-6\"><div class=\"d-flex align-items-center mb-2\"><span class=\"badge me-2\" :class=\"getMethodBadgeClass(request.Method)\" x-text=\"request.Method\"></span> <span class=\"text-truncate fw-bold\" x-text=\"request.URL\"></span></div><div class=\"text-muted small\" x-text=\"request.Domain\"></div></div><div class=\"col-md-6\"><div class=\"row text-center\"><div class=\"col-4\"><div class=\"small text-muted\">Status</div><span class=\"badge\" :class=\"getStatusBadgeClass(request.ResStatus)\" x-text=\"request.ResStatus\"></span></div><div class=\"col-4\"><div class=\"small text-muted\">Size</div><div class=\"fw-bold\" x-text=\"formatBytes(request.RespSize)\"></div></div><div class=\"col-4\"><div class=\"small text-muted\">Latency</div><div class=\"fw-bold\" x-text=\"request.LatencyMs + 'ms'\"></div></div></div></div></div><div x-show=\"request.description\" class=\"mt-2\"><div class=\"small text-muted\"><span x-html=\"request.description\"></span></div></div></div></div></div></template></div></div><script>\n\t\tfunction requestsList() {\n\t\t\treturn {\n\t\t\t\trequests: @{requests},\n\t\t\t\tfilteredRequests: @{requests},\n\t\t\t\tsearchTerm: '',\n\t\t\t\t\n\t\t\t\tfilterRequests() {\n\t\t\t\t\tif (!this.searchTerm.trim()) {\n\t\t\t\t\t\tthis.filteredRequests = this.requests;\n\t\t\t\t\t\treturn;\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tconst term = this.searchTerm.toLowerCase();\n\t\t\t\t\tthis.filteredRequests = this.requests.filter(request => {\n\t\t\t\t\t\tconst searchableText = [\n\t\t\t\t\t\t\trequest.URL,\n\t\t\t\t\t\t\trequest.Method,\n\t\t\t\t\t\t\trequest.Domain,\n\t\t\t\t\t\t\trequest.ResStatus.toString(),\n\t\t\t\t\t\t\trequest.description || ''\n\t\t\t\t\t\t].join(' ').toLowerCase();\n\t\t\t\t\t\t\n\t\t\t\t\t\tconst matches = searchableText.includes(term);\n\t\t\t\t\t\t\n\t\t\t\t\t\tif (matches && request.description) {\n\t\t\t\t\t\t\t// Highlight matching text in description\n\t\t\t\t\t\t\trequest.description = this.highlightText(request.description, term);\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\t\treturn matches;\n\t\t\t\t\t});\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\thighlightText(text, term) {\n\t\t\t\t\tconst regex = new RegExp(`(${term})`, 'gi');\n\t\t\t\t\treturn text.replace(regex, '<mark>$1</mark>');\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tviewRequest(id) {\n\t\t\t\t\twindow.location.href = `/dashboard/requests/detail/${id}`;\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tgetMethodBadgeClass(method) {\n\t\t\t\t\tconst classes = {\n\t\t\t\t\t\t'GET': 'bg-success',\n\t\t\t\t\t\t'POST': 'bg-primary',\n\t\t\t\t\t\t'PUT': 'bg-warning',\n\t\t\t\t\t\t'DELETE': 'bg-danger',\n\t\t\t\t\t\t'PATCH': 'bg-info'\n\t\t\t\t\t};\n\t\t\t\t\treturn classes[method] || 'bg-secondary';\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tgetStatusBadgeClass(status) {\n\t\t\t\t\tif (status >= 200 && status < 300) return 'bg-success';\n\t\t\t\t\tif (status >= 300 && status < 400) return 'bg-warning';\n\t\t\t\t\tif (status >= 400 && status < 500) return 'bg-danger';\n\t\t\t\t\tif (status >= 500) return 'bg-dark';\n\t\t\t\t\treturn 'bg-secondary';\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tformatBytes(bytes) {\n\t\t\t\t\tif (bytes === 0) return '0 B';\n\t\t\t\t\tconst k = 1024;\n\t\t\t\t\tconst sizes = ['B', 'KB', 'MB', 'GB'];\n\t\t\t\t\tconst i = Math.floor(Math.log(bytes) / Math.log(k));\n\t\t\t\t\treturn parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t</script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
+}
+
+func RequestDetail(request requests.MyRequest) templ.Component {
+	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
+		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
+		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
+			return templ_7745c5c3_CtxErr
+		}
+		templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
+		if !templ_7745c5c3_IsBuffer {
+			defer func() {
+				templ_7745c5c3_BufErr := templruntime.ReleaseBuffer(templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err == nil {
+					templ_7745c5c3_Err = templ_7745c5c3_BufErr
+				}
+			}()
+		}
+		ctx = templ.InitializeContext(ctx)
+		templ_7745c5c3_Var15 := templ.GetChildren(ctx)
+		if templ_7745c5c3_Var15 == nil {
+			templ_7745c5c3_Var15 = templ.NopComponent
+		}
+		ctx = templ.ClearChildren(ctx)
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<div x-data=\"requestDetail()\" class=\"container-fluid\"><div class=\"row mb-4\"><div class=\"col-12\"><div class=\"d-flex justify-content-between align-items-center\"><div><button class=\"btn btn-outline-secondary btn-sm me-2\" onclick=\"history.back()\"><i class=\"bi bi-arrow-left\"></i> Back</button><h2 class=\"d-inline\">Request Details</h2></div><div><button class=\"btn btn-outline-primary btn-sm me-2\" @click=\"copyAsCurl()\"><i class=\"bi bi-clipboard\"></i> Copy as cURL</button> <button class=\"btn btn-outline-secondary btn-sm me-2\" @click=\"openInVSCode()\"><i class=\"bi bi-code-square\"></i> Open in VS Code</button> <button class=\"btn btn-primary btn-sm\" @click=\"showNotesForm = !showNotesForm\"><i class=\"bi bi-plus-circle\"></i> Add Notes</button></div></div></div></div><!-- Notes Form --><div x-show=\"showNotesForm\" class=\"row mb-4\" x-transition><div class=\"col-12\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Add Notes</h5></div><div class=\"card-body\"><form @submit.prevent=\"addNote()\"><div class=\"mb-3\"><label for=\"noteTitle\" class=\"form-label\">Title</label> <input type=\"text\" class=\"form-control\" id=\"noteTitle\" x-model=\"noteForm.title\" required></div><div class=\"mb-3\"><label for=\"noteContent\" class=\"form-label\">Content</label> <textarea class=\"form-control\" id=\"noteContent\" rows=\"4\" x-model=\"noteForm.content\" required></textarea></div><div class=\"d-flex gap-2\"><button type=\"submit\" class=\"btn btn-primary\">Save Note</button> <button type=\"button\" class=\"btn btn-secondary\" @click=\"showNotesForm = false\">Cancel</button></div></form></div></div></div></div><div class=\"row\"><!-- Request Information --><div class=\"col-lg-6 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Request Information</h5></div><div class=\"card-body\"><div class=\"row mb-3\"><div class=\"col-4\"><strong>Method:</strong></div><div class=\"col-8\"><span class=\"badge\" :class=\"getMethodBadgeClass(request.Method)\" x-text=\"request.Method\"></span></div></div><div class=\"row mb-3\"><div class=\"col-4\"><strong>URL:</strong></div><div class=\"col-8\"><code class=\"text-break\" x-text=\"request.URL\"></code></div></div><div class=\"row mb-3\"><div class=\"col-4\"><strong>Domain:</strong></div><div class=\"col-8\" x-text=\"request.Domain\"></div></div><div class=\"row mb-3\"><div class=\"col-4\"><strong>Sequence:</strong></div><div class=\"col-8\" x-text=\"request.Sequence\"></div></div><div class=\"row mb-3\"><div class=\"col-4\"><strong>Request Time:</strong></div><div class=\"col-8\" x-text=\"request.RequestTime\"></div></div></div></div></div><!-- Response Information --><div class=\"col-lg-6 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Response Information</h5></div><div class=\"card-body\"><div class=\"row mb-3\"><div class=\"col-4\"><strong>Status:</strong></div><div class=\"col-8\"><span class=\"badge\" :class=\"getStatusBadgeClass(request.ResStatus)\" x-text=\"request.ResStatus\"></span></div></div><div class=\"row mb-3\"><div class=\"col-4\"><strong>Size:</strong></div><div class=\"col-8\" x-text=\"formatBytes(request.RespSize)\"></div></div><div class=\"row mb-3\"><div class=\"col-4\"><strong>Latency:</strong></div><div class=\"col-8\" x-text=\"request.LatencyMs + 'ms'\"></div></div><div class=\"row mb-3\"><div class=\"col-4\"><strong>Created:</strong></div><div class=\"col-8\" x-text=\"formatDate(request.CreatedAt)\"></div></div></div></div></div></div><div class=\"row\"><!-- Request Headers --><div class=\"col-lg-6 mb-4\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Request Headers</h5><button class=\"btn btn-sm btn-outline-secondary\" @click=\"copyToClipboard(request.ReqHeaders)\"><i class=\"bi bi-clipboard\"></i></button></div><div class=\"card-body\"><pre class=\"small mb-0\" style=\"max-height: 300px; overflow-y: auto;\" x-text=\"request.ReqHeaders\"></pre></div></div></div><!-- Response Headers --><div class=\"col-lg-6 mb-4\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Response Headers</h5><button class=\"btn btn-sm btn-outline-secondary\" @click=\"copyToClipboard(request.ResHeaders)\"><i class=\"bi bi-clipboard\"></i></button></div><div class=\"card-body\"><pre class=\"small mb-0\" style=\"max-height: 300px; overflow-y: auto;\" x-text=\"request.ResHeaders\"></pre></div></div></div></div><div class=\"row\"><!-- Request Body --><div class=\"col-lg-6 mb-4\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Request Body</h5><button class=\"btn btn-sm btn-outline-secondary\" @click=\"copyToClipboard(request.ReqBody)\"><i class=\"bi bi-clipboard\"></i></button></div><div class=\"card-body\"><pre class=\"small mb-0\" style=\"max-height: 400px; overflow-y: auto;\" x-text=\"request.ReqBody || '(empty)'\"></pre></div></div></div><!-- Response Body --><div class=\"col-lg-6 mb-4\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Response Body</h5><button class=\"btn btn-sm btn-outline-secondary\" @click=\"copyToClipboard(request.ResBody)\"><i class=\"bi bi-clipboard\"></i></button></div><div class=\"card-body\"><pre class=\"small mb-0\" style=\"max-height: 400px; overflow-y: auto;\" x-text=\"request.ResBody || '(empty)'\"></pre></div></div></div></div><!-- Hashes --><div class=\"row\"><div class=\"col-12 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Hashes</h5></div><div class=\"card-body\"><div class=\"row\"><div class=\"col-md-3 mb-3\"><div class=\"small text-muted\">Request Hash</div><code class=\"small\" x-text=\"request.ReqHash\"></code></div><div class=\"col-md-3 mb-3\"><div class=\"small text-muted\">Response Hash</div><code class=\"small\" x-text=\"request.ResHash\"></code></div><div class=\"col-md-3 mb-3\"><div class=\"small text-muted\">Request Hash 1</div><code class=\"small\" x-text=\"request.ReqHash1\"></code></div><div class=\"col-md-3 mb-3\"><div class=\"small text-muted\">Response Body Hash</div><code class=\"small\" x-text=\"request.ResBodyHash\"></code></div></div></div></div></div></div></div><script>\n\t\tfunction requestDetail() {\n\t\t\treturn {\n\t\t\t\trequest: @{request},\n\t\t\t\tshowNotesForm: false,\n\t\t\t\tnoteForm: {\n\t\t\t\t\ttitle: '',\n\t\t\t\t\tcontent: ''\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tcopyAsCurl() {\n\t\t\t\t\t// TODO: Implement cURL generation\n\t\t\t\t\talert('Copy as cURL functionality will be implemented');\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\topenInVSCode() {\n\t\t\t\t\t// TODO: Implement VS Code integration\n\t\t\t\t\talert('Open in VS Code functionality will be implemented');\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\taddNote() {\n\t\t\t\t\t// TODO: Implement note saving\n\t\t\t\t\talert('Note saved: ' + this.noteForm.title);\n\t\t\t\t\tthis.noteForm = { title: '', content: '' };\n\t\t\t\t\tthis.showNotesForm = false;\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tcopyToClipboard(text) {\n\t\t\t\t\tnavigator.clipboard.writeText(text).then(() => {\n\t\t\t\t\t\t// Show temporary success message\n\t\t\t\t\t\tconst btn = event.target.closest('button');\n\t\t\t\t\t\tconst originalHTML = btn.innerHTML;\n\t\t\t\t\t\tbtn.innerHTML = '<i class=\"bi bi-check\"></i>';\n\t\t\t\t\t\tbtn.classList.add('btn-success');\n\t\t\t\t\t\tbtn.classList.remove('btn-outline-secondary');\n\t\t\t\t\t\tsetTimeout(() => {\n\t\t\t\t\t\t\tbtn.innerHTML = originalHTML;\n\t\t\t\t\t\t\tbtn.classList.remove('btn-success');\n\t\t\t\t\t\t\tbtn.classList.add('btn-outline-secondary');\n\t\t\t\t\t\t}, 1000);\n\t\t\t\t\t});\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tgetMethodBadgeClass(method) {\n\t\t\t\t\tconst classes = {\n\t\t\t\t\t\t'GET': 'bg-success',\n\t\t\t\t\t\t'POST': 'bg-primary',\n\t\t\t\t\t\t'PUT': 'bg-warning',\n\t\t\t\t\t\t'DELETE': 'bg-danger',\n\t\t\t\t\t\t'PATCH': 'bg-info'\n\t\t\t\t\t};\n\t\t\t\t\treturn classes[method] || 'bg-secondary';\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tgetStatusBadgeClass(status) {\n\t\t\t\t\tif (status >= 200 && status < 300) return 'bg-success';\n\t\t\t\t\tif (status >= 300 && status < 400) return 'bg-warning';\n\t\t\t\t\tif (status >= 400 && status < 500) return 'bg-danger';\n\t\t\t\t\tif (status >= 500) return 'bg-dark';\n\t\t\t\t\treturn 'bg-secondary';\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tformatBytes(bytes) {\n\t\t\t\t\tif (bytes === 0) return '0 B';\n\t\t\t\t\tconst k = 1024;\n\t\t\t\t\tconst sizes = ['B', 'KB', 'MB', 'GB'];\n\t\t\t\t\tconst i = Math.floor(Math.log(bytes) / Math.log(k));\n\t\t\t\t\treturn parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];\n\t\t\t\t},\n\t\t\t\t\n\t\t\t\tformatDate(timestamp) {\n\t\t\t\t\treturn new Date(timestamp * 1000).toLocaleString();\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t</script>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		return nil
+	})
 }
 
 var _ = templruntime.GeneratedTemplate

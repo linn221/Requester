@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"fmt"
 	"io"
 	"linn221/Requester/requests"
@@ -58,6 +59,12 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 	mux.HandleFunc("POST /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
 		return handleImport(app, w, r)
 	}))
+	mux.HandleFunc("GET /requests/{importJobId}", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return handleRequestsList(app, w, r)
+	}))
+	mux.HandleFunc("GET /requests/detail/{id}", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return handleRequestDetail(app, w, r)
+	}))
 }
 
 func handleImport(app *App, w http.ResponseWriter, r *http.Request) error {
@@ -95,8 +102,16 @@ func handleImport(app *App, w http.ResponseWriter, r *http.Request) error {
 	}
 
 	// Create transaction with context
-	tx := app.db.WithContext(r.Context())
-	defer tx.Rollback()
+	tx := app.db.WithContext(r.Context()).Begin()
+	if tx.Error != nil {
+		return fmt.Errorf("failed to begin transaction: %v", tx.Error)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			panic(r)
+		}
+	}()
 
 	// Create ImportJob record
 	importJob := requests.ImportJob{
@@ -144,6 +159,7 @@ func handleImport(app *App, w http.ResponseWriter, r *http.Request) error {
 
 	// Commit transaction
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		return fmt.Errorf("failed to commit transaction: %v", err)
 	}
 
@@ -151,7 +167,7 @@ func handleImport(app *App, w http.ResponseWriter, r *http.Request) error {
 	summary := generateImportSummary(tempResults, title)
 
 	// Render success response
-	return views.ImportResult(title, len(tempResults), countUniqueDomains(tempResults), summary).Render(r.Context(), w)
+	return views.ImportResult(title, len(tempResults), countUniqueDomains(tempResults), summary, importJob.ID).Render(r.Context(), w)
 }
 
 func generateImportSummary(results []requests.TempMyRequest, title string) string {
@@ -199,6 +215,48 @@ func countUniqueDomains(results []requests.TempMyRequest) int {
 		domains[req.Domain] = true
 	}
 	return len(domains)
+}
+
+func handleRequestsList(app *App, w http.ResponseWriter, r *http.Request) error {
+	// Extract importJobId from URL
+	importJobIdStr := r.PathValue("importJobId")
+	importJobId, err := strconv.ParseUint(importJobIdStr, 10, 32)
+	if err != nil {
+		return fmt.Errorf("invalid import job ID: %v", err)
+	}
+
+	// Create transaction with context
+	tx := app.db.WithContext(r.Context())
+
+	// Fetch requests for the import job
+	var requests []requests.MyRequest
+	if err := tx.Where("import_job_id = ?", importJobId).Order("sequence ASC").Find(&requests).Error; err != nil {
+		return fmt.Errorf("failed to fetch requests: %v", err)
+	}
+
+	// Render the requests list
+	return views.RequestsList(requests).Render(r.Context(), w)
+}
+
+func handleRequestDetail(app *App, w http.ResponseWriter, r *http.Request) error {
+	// Extract ID from URL
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		return fmt.Errorf("invalid request ID: %v", err)
+	}
+
+	// Create transaction with context
+	tx := app.db.WithContext(r.Context())
+
+	// Fetch the specific request
+	var request requests.MyRequest
+	if err := tx.First(&request, id).Error; err != nil {
+		return fmt.Errorf("failed to fetch request: %v", err)
+	}
+
+	// Render the request detail
+	return views.RequestDetail(request).Render(r.Context(), w)
 }
 
 func (a *App) Serve() {
