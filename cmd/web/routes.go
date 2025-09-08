@@ -2,10 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
+	"linn221/Requester/requests"
 	"linn221/Requester/views"
 	"log"
 	"net/http"
 	"runtime/debug"
+	"strings"
 )
 
 func MakeAuthMiddleware(secret string) func(http.Handler) http.Handler {
@@ -52,6 +55,150 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 	mux.HandleFunc("GET /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
 		return views.ImportForm().Render(r.Context(), w)
 	}))
+	mux.HandleFunc("POST /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return handleImport(app, w, r)
+	}))
+}
+
+func handleImport(app *App, w http.ResponseWriter, r *http.Request) error {
+	// Parse multipart form
+	err := r.ParseMultipartForm(32 << 20) // 32 MB max
+	if err != nil {
+		return fmt.Errorf("failed to parse form: %v", err)
+	}
+
+	// Get form values
+	title := r.FormValue("title")
+	if title == "" {
+		return fmt.Errorf("title is required")
+	}
+
+	ignoredHeadersText := r.FormValue("ignoredHeaders")
+	ignoredHeaders := strings.Fields(strings.ReplaceAll(ignoredHeadersText, "\n", " "))
+
+	// Get uploaded file
+	file, header, err := r.FormFile("harfile")
+	if err != nil {
+		return fmt.Errorf("failed to get uploaded file: %v", err)
+	}
+	defer file.Close()
+
+	// Check file extension
+	if !strings.HasSuffix(strings.ToLower(header.Filename), ".har") {
+		return fmt.Errorf("file must be a .har file")
+	}
+
+	// Read file content
+	fileContent, err := io.ReadAll(file)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %v", err)
+	}
+
+	// Create transaction with context
+	tx := app.db.WithContext(r.Context())
+	defer tx.Rollback()
+
+	// Create ImportJob record
+	importJob := requests.ImportJob{
+		Title:          title,
+		IgnoredHeaders: strings.Join(ignoredHeaders, ","),
+	}
+
+	// Save ImportJob to database
+	if err := tx.Create(&importJob).Error; err != nil {
+		return fmt.Errorf("failed to create import job: %v", err)
+	}
+
+	// Create resHashFunc that uses ignored headers
+	resHashFunc := func(my *requests.TempMyRequest) (string, string) {
+		// Request text with filtered headers
+		reqText := my.URL + " " + my.Method + " " + my.ReqBody + " " + my.ReqHeaders.EchoFilter(ignoredHeaders...)
+
+		// Response text with filtered headers
+		respText := fmt.Sprintf("%d %d %s %s",
+			my.ResStatus, my.RespSize, my.ResBody, my.ResHeaders.EchoFilter(ignoredHeaders...),
+		)
+		return reqText, respText
+	}
+
+	// Parse HAR file
+	tempResults, err := requests.ParseHAR(fileContent, resHashFunc)
+	if err != nil {
+		return fmt.Errorf("failed to parse HAR file: %v", err)
+	}
+
+	// Convert TempMyRequest to MyRequest and save to database
+	var dbResults []requests.MyRequest
+	for _, tempReq := range tempResults {
+		dbReq, err := tempReq.ToMyRequest(importJob.ID)
+		if err != nil {
+			return fmt.Errorf("failed to convert request to database format: %v", err)
+		}
+		dbResults = append(dbResults, *dbReq)
+	}
+
+	// Save all requests to database in batch
+	if err := tx.CreateInBatches(dbResults, 100).Error; err != nil {
+		return fmt.Errorf("failed to save requests to database: %v", err)
+	}
+
+	// Commit transaction
+	if err := tx.Commit().Error; err != nil {
+		return fmt.Errorf("failed to commit transaction: %v", err)
+	}
+
+	// Generate summary
+	summary := generateImportSummary(tempResults, title)
+
+	// Render success response
+	return views.ImportResult(title, len(tempResults), countUniqueDomains(tempResults), summary).Render(r.Context(), w)
+}
+
+func generateImportSummary(results []requests.TempMyRequest, title string) string {
+	var summary strings.Builder
+	summary.WriteString(fmt.Sprintf("HAR Import Summary for: %s\n", title))
+	summary.WriteString(fmt.Sprintf("Total Requests: %d\n", len(results)))
+	summary.WriteString(fmt.Sprintf("Unique Domains: %d\n", countUniqueDomains(results)))
+	summary.WriteString("\nDomain Breakdown:\n")
+
+	domainCounts := make(map[string]int)
+	for _, req := range results {
+		domainCounts[req.Domain]++
+	}
+
+	for domain, count := range domainCounts {
+		summary.WriteString(fmt.Sprintf("  %s: %d requests\n", domain, count))
+	}
+
+	summary.WriteString("\nMethod Breakdown:\n")
+	methodCounts := make(map[string]int)
+	for _, req := range results {
+		methodCounts[req.Method]++
+	}
+
+	for method, count := range methodCounts {
+		summary.WriteString(fmt.Sprintf("  %s: %d requests\n", method, count))
+	}
+
+	summary.WriteString("\nStatus Code Breakdown:\n")
+	statusCounts := make(map[int]int)
+	for _, req := range results {
+		statusCounts[req.ResStatus]++
+	}
+
+	for status, count := range statusCounts {
+		summary.WriteString(fmt.Sprintf("  %d: %d responses\n", status, count))
+	}
+
+	return summary.String()
+}
+
+func countUniqueDomains(results []requests.TempMyRequest) int {
+	domains := make(map[string]bool)
+	for _, req := range results {
+		domains[req.Domain] = true
+	}
+	return len(domains)
 }
 
 func (a *App) Serve() {

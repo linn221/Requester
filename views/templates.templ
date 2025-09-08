@@ -39,12 +39,21 @@ templ HomePage() {
 }
 
 templ ImportForm() {
-	<form hx-post="/import">
-		<label for="#harfile">File</label>
-		<input type="file" name="harfile" class="form-control" id="harfile"/>
-		<label for="title" class="form-control">Title</label>
-		<input type="text" name="title" id="title" class="form-control" required/>
-		<button class="btn btn-primary" type="submit">Upload</button>
+	<form hx-post="/dashboard/import" enctype="multipart/form-data">
+		<div class="mb-3">
+			<label for="harfile" class="form-label">HAR File</label>
+			<input type="file" name="harfile" class="form-control" id="harfile" accept=".har" required/>
+		</div>
+		<div class="mb-3">
+			<label for="title" class="form-label">Title</label>
+			<input type="text" name="title" id="title" class="form-control" required/>
+		</div>
+		<div class="mb-3">
+			<label for="ignoredHeaders" class="form-label">Ignored Headers (one per line)</label>
+			<textarea name="ignoredHeaders" id="ignoredHeaders" class="form-control" rows="3" placeholder="date&#10;content-length&#10;server"></textarea>
+			<small class="form-text text-muted">Enter header names to ignore when processing the HAR file, one per line</small>
+		</div>
+		<button class="btn btn-primary" type="submit">Upload and Process</button>
 	</form>
 }
 
@@ -63,6 +72,18 @@ templ ErrorBox(message string) {
 	<div class="alert alert-danger alert-dismissible fade show" role="alert" id="flash">
 		<strong>Error:</strong> { message }
 		<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+	</div>
+}
+
+templ ImportResult(title string, totalRequests int, uniqueDomains int, summary string) {
+	<div class="alert alert-success">
+		<h5 class="alert-heading">Import Successful!</h5>
+		<p><strong>Title:</strong> { title }</p>
+		<p><strong>Total Requests:</strong> { totalRequests }</p>
+		<p><strong>Unique Domains:</strong> { uniqueDomains }</p>
+		<hr/>
+		<p class="mb-0"><strong>Summary:</strong></p>
+		<pre class="mt-2">{ summary }</pre>
 	</div>
 }
 
