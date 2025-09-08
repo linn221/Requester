@@ -47,10 +47,10 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 
 func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
-		app.templates.HomePage(w)
+		views.HomePage().Render(r.Context(), w)
 	})
-	mux.HandleFunc("GET /import", app.HandleMin(func(v *views.MyTemplates, w http.ResponseWriter, r *http.Request) error {
-		return v.ShowImportForm(w)
+	mux.HandleFunc("GET /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return views.ImportForm().Render(r.Context(), w)
 	}))
 }
 
@@ -58,18 +58,23 @@ func (a *App) Serve() {
 	mux := http.NewServeMux()
 	authMux := http.NewServeMux()
 	authMiddleware := MakeAuthMiddleware(a.secret)
+	
+	// Dashboard routes with authentication
 	makeDashboardRoutes(a, authMux)
-
+	
+	// Authentication routes
 	mux.HandleFunc("GET /start-session", func(w http.ResponseWriter, r *http.Request) {
 		s := r.URL.Query().Get("secret")
 		if s != "" {
 			// set cookies
 			http.SetCookie(w, &http.Cookie{
-				Name:   "secret",
-				Value:  s,
-				MaxAge: 10 * 60 * 60,
-				Path:   "/", Domain: "",
-				Secure: false, HttpOnly: true,
+				Name:     "secret",
+				Value:    s,
+				MaxAge:   10 * 60 * 60,
+				Path:     "/",
+				Domain:   "",
+				Secure:   false,
+				HttpOnly: true,
 			})
 
 			http.Redirect(w, r, "/dashboard/", http.StatusTemporaryRedirect) // the final trail is important for some reason
@@ -83,7 +88,9 @@ func (a *App) Serve() {
 
 	mux.Handle("/dashboard/", http.StripPrefix("/dashboard", authMiddleware(authMux))) // the final trail is important
 
+	// Print the URL with secret for authentication
 	fmt.Printf("http://localhost:%s/start-session?secret=%s\n", a.port, a.secret)
+	
 	err := http.ListenAndServe(":"+a.port, RecoveryMiddleware(mux))
 	if err != nil {
 		log.Fatal(err)

@@ -1,9 +1,0 @@
-{{ if .InProgress}}
-<div hx-trigger="every 3s" hx-get="/job-status/{{.Id}}">
-    Percentage: {{.Percentage}}
-</div>
-{{end}}
-
-{{ if .Success}}
-<div>Success</div>
-{{end}}
