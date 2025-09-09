@@ -2,27 +2,67 @@ package templates
 
 import "linn221/Requester/requests"
 import "strconv"
-import "strings"
 
 // Request listing page
-templ RequestsListPage(requests []requests.MyRequest, orderBy string) {
-	@LayoutWithNav("Requests - App", RequestsList(requests, orderBy), "requests")
+templ RequestsListPage(requests []requests.MyRequest, orderBy, direction, importJobID, endpointID, search, pageTitle string) {
+	@LayoutWithNav(pageTitle + " - App", RequestsList(requests, orderBy, direction, importJobID, endpointID, search, pageTitle), "requests")
 }
 
 // Request listing component
-templ RequestsList(requests []requests.MyRequest, orderBy string) {
-	<div class="container-fluid">
+templ RequestsList(requests []requests.MyRequest, orderBy, direction, importJobID, endpointID, search, pageTitle string) {
+	<div class="container-fluid px-0">
 		<div class="row mb-4">
 			<div class="col-12">
 				<div class="d-flex justify-content-between align-items-center mb-3">
-					<h2>Requests</h2>
+					<h2>{ pageTitle }</h2>
 				</div>
-				<!-- Search bar (UI only) - full width -->
+				<!-- Search bar with HTMX -->
 				<div class="input-group mb-3">
-					<input type="text" class="form-control" placeholder="Search requests..." aria-label="Search requests">
+					<input type="hidden" name="import_job_id" value={ importJobID }>
+					<input type="hidden" name="endpoint_id" value={ endpointID }>
+					<input 
+						type="text" 
+						class="form-control" 
+						placeholder="Search requests..." 
+						aria-label="Search requests"
+						name="search"
+						value={ search }
+						hx-get="/dashboard/requests"
+						hx-trigger="keyup changed delay:500ms"
+						hx-target="#requests-content"
+						hx-include="[name='search'], [name='import_job_id'], [name='endpoint_id'], [id='orderBy'], [id='direction']"
+					>
 					<button class="btn btn-outline-secondary" type="button">
 						<i class="bi bi-search"></i>
 					</button>
+				</div>
+				
+				<!-- Ordering controls -->
+				<div class="row mb-3">
+					<div class="col-md-6">
+						<div class="d-flex align-items-center gap-2">
+							<label for="orderBy" class="form-label mb-0">Sort by:</label>
+							<select class="form-select form-select-sm" id="orderBy" hx-get="/dashboard/requests" hx-trigger="change" hx-target="#requests-content" hx-include="[name='search'], [name='import_job_id'], [name='endpoint_id'], [id='orderBy'], [id='direction']">
+								<option value="sequence_number" selected={ orderBy == "sequence_number" }>Sequence</option>
+								<option value="method" selected={ orderBy == "method" }>Method</option>
+								<option value="status" selected={ orderBy == "status" }>Status</option>
+								<option value="url" selected={ orderBy == "url" }>URL</option>
+								<option value="domain" selected={ orderBy == "domain" }>Domain</option>
+								<option value="size" selected={ orderBy == "size" }>Size</option>
+								<option value="type" selected={ orderBy == "type" }>Type</option>
+								<option value="latency" selected={ orderBy == "latency" }>Latency</option>
+							</select>
+						</div>
+					</div>
+					<div class="col-md-6">
+						<div class="d-flex align-items-center gap-2">
+							<label for="direction" class="form-label mb-0">Direction:</label>
+							<select class="form-select form-select-sm" id="direction" hx-get="/dashboard/requests" hx-trigger="change" hx-target="#requests-content" hx-include="[name='search'], [name='import_job_id'], [name='endpoint_id'], [id='orderBy'], [id='direction']">
+								<option value="ASC" selected={ direction == "ASC" }>Ascending</option>
+								<option value="DESC" selected={ direction == "DESC" }>Descending</option>
+							</select>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -43,162 +83,139 @@ templ RequestsList(requests []requests.MyRequest, orderBy string) {
 				</div>
 			</div>
 		} else {
-			<div class="table-responsive">
-				<table class="table table-hover">
-					<thead class="table-light">
-						<tr>
-							<th>
-								<a href="#" class="text-decoration-none text-dark" onclick="sortColumn('sequence_number')">
-									# { getSortIcon("sequence_number", orderBy) }
-								</a>
-							</th>
-							<th>
-								<a href="#" class="text-decoration-none text-dark" onclick="sortColumn('method')">
-									Method { getSortIcon("method", orderBy) }
-								</a>
-							</th>
-							<th>
-								<a href="#" class="text-decoration-none text-dark" onclick="sortColumn('status')">
-									Status { getSortIcon("status", orderBy) }
-								</a>
-							</th>
-							<th>
-								<a href="#" class="text-decoration-none text-dark" onclick="sortColumn('url')">
-									URL { getSortIcon("url", orderBy) }
-								</a>
-							</th>
-							<th>
-								<a href="#" class="text-decoration-none text-dark" onclick="sortColumn('domain')">
-									Domain { getSortIcon("domain", orderBy) }
-								</a>
-							</th>
-							<th>
-								<a href="#" class="text-decoration-none text-dark" onclick="sortColumn('size')">
-									Size / Type { getSortIcon("size", orderBy) }
-								</a>
-							</th>
-							<th>
-								<a href="#" class="text-decoration-none text-dark" onclick="sortColumn('latency')">
-									Latency { getSortIcon("latency", orderBy) }
-								</a>
-							</th>
-							<th>Hashes</th>
-							<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						for _, request := range requests {
-							<tr>
-								<td>{ strconv.Itoa(request.Sequence) }</td>
-								<td>
-									<span class={ getMethodBadgeClass(request.Method) }>{ request.Method }</span>
-								</td>
-								<td>
-									<span class={ getStatusBadgeClass(request.ResStatus) }>{ request.ResStatus }</span>
-								</td>
-								<td>
-									<div class="url-text" title={ request.URL }>{ request.URL }</div>
-								</td>
-								<td>{ request.Domain }</td>
-								<td>
-									<div class="d-flex flex-column gap-1">
-										<span>{ formatBytes(request.RespSize) }</span>
-										<span class="small text-muted">{ getContentType(request.ResHeaders) }</span>
-									</div>
-								</td>
-								<td>{ request.LatencyMs }ms</td>
-								<td>
-									<div class="d-flex flex-column gap-1">
-										<div class="small">
-											<div class="text-muted">Req:</div>
-											<code class="small">{ request.ReqHash }</code>
+			<div id="requests-content">
+				<div class="row">
+					for _, request := range requests {
+					<div class="col-12 mb-3">
+						<div class="card">
+							<div class="card-body">
+								<div class="row">
+									<div class="col-md-8">
+										<div class="d-flex align-items-center gap-2 mb-3">
+											<span class="badge bg-secondary">#{ strconv.Itoa(request.Sequence) }</span>
+											<span class={ getMethodBadgeClass(request.Method) }>{ request.Method }</span>
+											<span class={ getStatusBadgeClass(request.ResStatus) }>{ request.ResStatus }</span>
 										</div>
-										<div class="small">
-											<div class="text-muted">Res:</div>
-											<code class="small">{ request.ResHash }</code>
+										
+										<div class="mb-3">
+											<strong>URL:</strong>
+											<div class="url-text mt-1">
+												<a href={ request.URL } target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+													{ truncateURL(request.URL, 80) }
+												</a>
+												if len(request.URL) > 80 {
+													<button 
+														type="button" 
+														class="btn btn-link btn-sm p-0 ms-1 fw-bold"
+														onclick="this.previousElementSibling.textContent = this.getAttribute('data-full-url'); this.textContent = 'less'; this.onclick = function() { this.previousElementSibling.textContent = this.getAttribute('data-truncated'); this.textContent = 'more'; this.onclick = arguments.callee; }"
+														data-full-url={ request.URL }
+														data-truncated={ truncateURL(request.URL, 80) }
+													>
+														more
+													</button>
+												}
+											</div>
 										</div>
-										<div class="small">
-											<div class="text-muted">Req1:</div>
-											<code class="small">{ request.ReqHash1 }</code>
-										</div>
-										<div class="small">
-											<div class="text-muted">Body:</div>
-											<code class="small">{ request.ResBodyHash }</code>
+										
+										<div class="row g-3">
+											<div class="col-sm-6 col-md-3">
+												<small class="text-muted d-block">Domain</small>
+												<div class="fw-medium">{ request.Domain }</div>
+											</div>
+											<div class="col-sm-6 col-md-3">
+												<small class="text-muted d-block">Size</small>
+												<div class="fw-medium">{ formatBytes(request.RespSize) }</div>
+											</div>
+											<div class="col-sm-6 col-md-3">
+												<small class="text-muted d-block">Type</small>
+												<div class="fw-medium small">{ getContentType(request.ResHeaders) }</div>
+											</div>
+											<div class="col-sm-6 col-md-3">
+												<small class="text-muted d-block">Latency</small>
+												<div class="fw-medium">{ request.LatencyMs }ms</div>
+											</div>
 										</div>
 									</div>
-								</td>
-								<td>
-									<a href={ "/dashboard/requests/detail/" + strconv.FormatUint(uint64(request.ID), 10) } class="btn btn-outline-primary btn-sm">
-										<i class="bi bi-eye"></i> View Details
-									</a>
-								</td>
-							</tr>
-						}
-					</tbody>
-				</table>
+									
+									<div class="col-md-4">
+										<div class="d-flex justify-content-end mb-3">
+											<a href={ "/dashboard/requests/detail/" + strconv.FormatUint(uint64(request.ID), 10) } class="btn btn-outline-primary">
+												<i class="bi bi-eye"></i> View Details
+											</a>
+										</div>
+										
+										<div>
+											<small class="text-muted d-block mb-2">Hashes</small>
+											<div class="small">
+												<div class="mb-1">
+													<span class="text-muted">Req:</span> 
+													<code class="small">{ request.ReqHash }</code>
+												</div>
+												<div class="mb-1">
+													<span class="text-muted">Res:</span> 
+													<code class="small">{ request.ResHash }</code>
+												</div>
+												<div class="mb-1">
+													<span class="text-muted">Req1:</span> 
+													<code class="small">{ request.ReqHash1 }</code>
+												</div>
+												<div>
+													<span class="text-muted">Body:</span> 
+													<code class="small">{ request.ResBodyHash }</code>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+					}
+				</div>
 			</div>
 		}
 	</div>
 	
-	<script>
-		let currentOrderBy = '';
-		let currentDirection = 'ASC';
-		
-		function sortColumn(column) {
-			// Parse current orderBy to get direction
-			if (currentOrderBy === column) {
-				// Toggle direction
-				currentDirection = currentDirection === 'ASC' ? 'DESC' : 'ASC';
-			} else {
-				// New column, start with ASC
-				currentDirection = 'ASC';
-			}
-			
-			currentOrderBy = column;
-			
-			// Get current URL parameters
-			const urlParams = new URLSearchParams(window.location.search);
-			urlParams.set('order_by', column + ':' + currentDirection);
-			
-			// Make HTMX request
-			const newUrl = window.location.pathname + '?' + urlParams.toString();
-			htmx.ajax('GET', newUrl, {target: '#main', swap: 'innerHTML'});
-		}
-		
-		// Initialize current orderBy from URL
-		const urlParams = new URLSearchParams(window.location.search);
-		const orderByParam = urlParams.get('order_by');
-		if (orderByParam) {
-			const parts = orderByParam.split(':');
-			currentOrderBy = parts[0];
-			currentDirection = parts[1] || 'ASC';
-		}
-	</script>
 }
 
-// Helper function to get sort icon based on current order
-func getSortIcon(column, orderBy string) string {
-	if orderBy == "" {
-		return ""
+// Helper function to build search URL
+func buildSearchURL(importJobID, endpointID, orderBy, direction string) string {
+	baseURL := "/dashboard/requests?"
+	
+	if endpointID != "" {
+		baseURL += "endpoint_id=" + endpointID
+	} else if importJobID != "" {
+		baseURL += "import_job_id=" + importJobID
 	}
 	
-	parts := strings.Split(orderBy, ":")
-	if len(parts) < 2 {
-		return ""
+	if orderBy != "" {
+		baseURL += "&order_by=" + orderBy
 	}
 	
-	currentColumn := parts[0]
-	direction := parts[1]
-	
-	if currentColumn != column {
-		return ""
+	if direction != "" {
+		asc := "true"
+		if direction == "DESC" {
+			asc = "false"
+		}
+		baseURL += "&asc=" + asc
 	}
 	
-	if direction == "ASC" {
-		return "↑"
-	} else if direction == "DESC" {
-		return "↓"
+	return baseURL
+}
+
+
+// Helper function to truncate URL
+func truncateURL(url string, maxLength int) string {
+	if len(url) <= maxLength {
+		return url
 	}
-	
-	return ""
+	return url[:maxLength] + "..."
+}
+
+// Helper function to truncate hash for display
+func truncateHash(hash string) string {
+	if len(hash) <= 12 {
+		return hash
+	}
+	return hash[:12] + "..."
 }

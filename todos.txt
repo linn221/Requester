@@ -1,3 +1,9 @@
 [ ] Polymorphic model Note, CRUD under NoteDetails for now
 [ ] Endpoint routes, each request having endpoint_id, editing the request.
 [ ] Get requests by hashes, make hashes clickable
+[ ] CRUD program model, each import job will ask for program_id, and endpoints and requests created will also have the program_id.
+
+Create a new model Endpoint, which will have Id, Method, Domain, Uri, EndpointType of enum(Web,Api,GraphQL), Notes. Request model will have EndpointId field. And when importing har file, check if an Endpoint with the request Domain,Method and Uri(without query parameter part) exist, if exists, use the existing EndpointId when storing the Request. If not, create the Endpoint and then store it. Add Endpoints in navbar, listing each endpoint and you can view the requests of the selected endpoint, via requests?endpoint_id=4. Implement the server side code as well. In summary, I want to associate with a new Endpoint type to each request for querying related requests information.
+
+Uncaught SyntaxError: redeclaration of const createApp
+

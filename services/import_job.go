@@ -29,3 +29,17 @@ func (s *ImportJobService) GetAllImportJobs(ctx context.Context) ([]requests.Imp
 
 	return importJobs, nil
 }
+
+// GetImportJobByID fetches a single import job by ID
+func (s *ImportJobService) GetImportJobByID(ctx context.Context, id uint) (*requests.ImportJob, error) {
+	// Create transaction with context
+	tx := s.db.WithContext(ctx)
+
+	// Fetch import job by ID
+	var importJob requests.ImportJob
+	if err := tx.First(&importJob, id).Error(); err != nil {
+		return nil, fmt.Errorf("failed to fetch import job %d: %v", id, err)
+	}
+
+	return &importJob, nil
+}

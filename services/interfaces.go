@@ -14,6 +14,9 @@ type Transaction interface {
 	Begin() Tx
 	Where(query interface{}, args ...interface{}) Query
 	First(dest interface{}, conds ...interface{}) Query
+	Create(value interface{}) Query
+	Order(value interface{}) Query
+	Model(value interface{}) Query
 }
 
 // Tx interface for database transactions
@@ -34,6 +37,10 @@ type Query interface {
 	Distinct(column string) Query
 	Pluck(column string, dest interface{}) Query
 	First(dest interface{}, conds ...interface{}) Query
+	Select(query interface{}, args ...interface{}) Query
+	Scan(dest interface{}) Query
+	Group(query string) Query
+	Where(query interface{}, args ...interface{}) Query
 }
 
 // HTTPRequest interface for HTTP request operations
@@ -64,8 +71,8 @@ type ImportRequest struct {
 
 // ImportResult represents the result of an import operation
 type ImportResult struct {
-	ImportJobID    uint
-	RequestCount   int
-	UniqueDomains  int
-	Summary        string
+	ImportJobID   uint
+	RequestCount  int
+	UniqueDomains int
+	Summary       string
 }

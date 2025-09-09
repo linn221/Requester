@@ -9,12 +9,16 @@ import (
 
 // ImportService handles HAR file import operations
 type ImportService struct {
-	db Database
+	db              Database
+	endpointService *EndpointService
 }
 
 // NewImportService creates a new ImportService
-func NewImportService(db Database) *ImportService {
-	return &ImportService{db: db}
+func NewImportService(db Database, endpointService *EndpointService) *ImportService {
+	return &ImportService{
+		db:              db,
+		endpointService: endpointService,
+	}
 }
 
 // ImportHAR processes a HAR file import
@@ -68,7 +72,16 @@ func (s *ImportService) ImportHAR(ctx context.Context, req ImportRequest) (*Impo
 	// Convert TempMyRequest to MyRequest and save to database
 	var dbResults []requests.MyRequest
 	for _, tempReq := range tempResults {
-		dbReq, err := tempReq.ToMyRequest(importJob.ID)
+		// Extract URI without query parameters
+		uri := requests.ExtractURIWithoutQuery(tempReq.URL)
+
+		// Find or create endpoint
+		endpoint, err := s.endpointService.FindOrCreateEndpoint(ctx, tempReq.Method, tempReq.Domain, uri)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find or create endpoint: %v", err)
+		}
+
+		dbReq, err := tempReq.ToMyRequest(importJob.ID, endpoint.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert request to database format: %v", err)
 		}

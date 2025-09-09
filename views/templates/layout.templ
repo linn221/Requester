@@ -126,6 +126,7 @@ templ LayoutWithNav(title string, content templ.Component, currentPage string) {
 							<a class="nav-link" href="/dashboard/" class={ getNavLinkClass(currentPage, "home") }>Home</a>
 							<a class="nav-link" href="/dashboard/import" class={ getNavLinkClass(currentPage, "import") }>Import File</a>
 							<a class="nav-link" href="/dashboard/import-jobs" class={ getNavLinkClass(currentPage, "jobs") }>Jobs</a>
+							<a class="nav-link" href="/dashboard/endpoints" class={ getNavLinkClass(currentPage, "endpoints") }>Endpoints</a>
 							<a class="nav-link" href="/dashboard/requests" class={ getNavLinkClass(currentPage, "requests") }>Requests</a>
 							<a class="nav-link text-danger" href="/logout" hx-post="/logout" hx-target="body">Quit</a>
 						</div>

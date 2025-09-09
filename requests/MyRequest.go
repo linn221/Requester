@@ -8,43 +8,68 @@ import (
 	"strings"
 )
 
+// EndpointType represents the type of endpoint
+type EndpointType string
+
+const (
+	EndpointTypeWeb     EndpointType = "Web"
+	EndpointTypeAPI     EndpointType = "API"
+	EndpointTypeGraphQL EndpointType = "GraphQL"
+)
+
+// Endpoint represents an API endpoint
+type Endpoint struct {
+	ID           uint         `gorm:"primaryKey"`
+	Method       string       `gorm:"size:10;not null"`
+	Domain       string       `gorm:"size:255;not null"`
+	URI          string       `gorm:"type:text;not null"`
+	EndpointType EndpointType `gorm:"size:20;not null;default:'API'"`
+	Notes        string       `gorm:"type:text"`
+	CreatedAt    int64        `gorm:"autoCreateTime"`
+	UpdatedAt    int64        `gorm:"autoUpdateTime"`
+
+	// One-to-many relationship
+	Requests []MyRequest `gorm:"foreignKey:EndpointID"`
+}
+
 type ImportJob struct {
-	ID              uint   `gorm:"primaryKey"`
-	Title           string `gorm:"not null"`
-	IgnoredHeaders  string `gorm:"type:text"` // Store as JSON string
-	CreatedAt       int64  `gorm:"autoCreateTime"`
-	UpdatedAt       int64  `gorm:"autoUpdateTime"`
-	
+	ID             uint   `gorm:"primaryKey"`
+	Title          string `gorm:"not null"`
+	IgnoredHeaders string `gorm:"type:text"` // Store as JSON string
+	CreatedAt      int64  `gorm:"autoCreateTime"`
+	UpdatedAt      int64  `gorm:"autoUpdateTime"`
+
 	// One-to-many relationship
 	Requests []MyRequest `gorm:"foreignKey:ImportJobID"`
 }
 
 type MyRequest struct {
-	ID            uint   `gorm:"primaryKey"`
-	ImportJobID   uint   `gorm:"not null;index"` // Foreign key to ImportJob
-	Sequence      int    `gorm:"not null"`
-	URL           string `gorm:"type:text;not null"`
-	Method        string `gorm:"size:10;not null"`
-	Domain        string `gorm:"size:255;not null"`
+	ID          uint   `gorm:"primaryKey"`
+	ImportJobID uint   `gorm:"not null;index"` // Foreign key to ImportJob
+	EndpointID  uint   `gorm:"not null;index"` // Foreign key to Endpoint
+	Sequence    int    `gorm:"not null"`
+	URL         string `gorm:"type:text;not null"`
+	Method      string `gorm:"size:10;not null"`
+	Domain      string `gorm:"size:255;not null"`
 
-	ReqHeaders    string `gorm:"type:text"` // Store as JSON string
-	ReqBody       string `gorm:"type:longtext"`
+	ReqHeaders string `gorm:"type:text"` // Store as JSON string
+	ReqBody    string `gorm:"type:longtext"`
 
-	ResStatus     int    `gorm:"not null"`
-	ResHeaders    string `gorm:"type:text"` // Store as JSON string
-	ResBody       string `gorm:"type:longtext"`
-	RespSize      int    `gorm:"not null"`
-	LatencyMs     int64  `gorm:"not null"`
+	ResStatus  int    `gorm:"not null"`
+	ResHeaders string `gorm:"type:text"` // Store as JSON string
+	ResBody    string `gorm:"type:longtext"`
+	RespSize   int    `gorm:"not null"`
+	LatencyMs  int64  `gorm:"not null"`
 
-	RequestTime   string `gorm:"size:50"`
+	RequestTime string `gorm:"size:50"`
 	// hashes
-	ReqHash1      string `gorm:"size:64;index"` // hash raw request
-	ReqHash       string `gorm:"size:64;index"`
-	ResHash       string `gorm:"size:64;index"`
-	ResBodyHash   string `gorm:"size:64;index"`
-	
-	CreatedAt     int64  `gorm:"autoCreateTime"`
-	UpdatedAt     int64  `gorm:"autoUpdateTime"`
+	ReqHash1    string `gorm:"size:64;index"` // hash raw request
+	ReqHash     string `gorm:"size:64;index"`
+	ResHash     string `gorm:"size:64;index"`
+	ResBodyHash string `gorm:"size:64;index"`
+
+	CreatedAt int64 `gorm:"autoCreateTime"`
+	UpdatedAt int64 `gorm:"autoUpdateTime"`
 }
 
 // Temporary struct for parsing HAR files (with HeaderSlice fields)
@@ -139,20 +164,21 @@ func (r TempMyRequest) requestText() string {
 }
 
 // Convert TempMyRequest to MyRequest for database storage
-func (temp *TempMyRequest) ToMyRequest(importJobID uint) (*MyRequest, error) {
+func (temp *TempMyRequest) ToMyRequest(importJobID, endpointID uint) (*MyRequest, error) {
 	// Convert HeaderSlice to JSON strings
 	reqHeadersJSON, err := temp.ReqHeaders.ToJSON()
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert request headers to JSON: %v", err)
 	}
-	
+
 	resHeadersJSON, err := temp.ResHeaders.ToJSON()
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert response headers to JSON: %v", err)
 	}
-	
+
 	return &MyRequest{
 		ImportJobID: importJobID,
+		EndpointID:  endpointID,
 		Sequence:    temp.Sequence,
 		URL:         temp.URL,
 		Method:      temp.Method,
@@ -232,4 +258,29 @@ func ParseHAR(bs []byte, resHashFunc func(*TempMyRequest) (string, string)) ([]T
 	}
 
 	return result, nil
+}
+
+// ExtractURIWithoutQuery extracts the URI path without query parameters
+func ExtractURIWithoutQuery(fullURL string) string {
+	u, err := url.Parse(fullURL)
+	if err != nil {
+		return fullURL
+	}
+	return u.Path
+}
+
+// DetermineEndpointType determines the endpoint type based on URL and method
+func DetermineEndpointType(url, method string) EndpointType {
+	// Check for GraphQL indicators
+	if strings.Contains(url, "/graphql") || strings.Contains(url, "/query") {
+		return EndpointTypeGraphQL
+	}
+
+	// Check for API indicators
+	if strings.Contains(url, "/api/") || strings.Contains(url, "/v1/") || strings.Contains(url, "/v2/") {
+		return EndpointTypeAPI
+	}
+
+	// Default to Web for other cases
+	return EndpointTypeWeb
 }

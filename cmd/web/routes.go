@@ -51,6 +51,7 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 	// Create handlers
 	importJobsHandler := handlers.NewImportJobsHandler(app.services)
 	requestsHandler := handlers.NewRequestsHandler(app.services)
+	endpointsHandler := handlers.NewEndpointsHandler(app.services)
 
 	// Home page - check if it's an HTMX request
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
@@ -81,6 +82,16 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 	// Import jobs list - check if it's an HTMX request
 	mux.HandleFunc("GET /import-jobs", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
 		return importJobsHandler.HandleImportJobsList(w, r)
+	}))
+
+	// Endpoints list - check if it's an HTMX request
+	mux.HandleFunc("GET /endpoints", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return endpointsHandler.HandleEndpointsList(w, r)
+	}))
+
+	// Endpoint detail - check if it's an HTMX request
+	mux.HandleFunc("GET /endpoints/{id}", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return endpointsHandler.HandleEndpointDetail(w, r)
 	}))
 
 	// Requests list - check if it's an HTMX request

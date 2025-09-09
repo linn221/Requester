@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+
 	"gorm.io/gorm"
 )
 
@@ -38,6 +39,21 @@ func (g *GormTransactionAdapter) Where(query interface{}, args ...interface{}) Q
 // First finds the first record
 func (g *GormTransactionAdapter) First(dest interface{}, conds ...interface{}) Query {
 	return &GormQueryAdapter{db: g.db.First(dest, conds...)}
+}
+
+// Create creates a record
+func (g *GormTransactionAdapter) Create(value interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Create(value)}
+}
+
+// Order adds an ORDER BY clause
+func (g *GormTransactionAdapter) Order(value interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Order(value)}
+}
+
+// Model specifies the model you would like to run db operations
+func (g *GormTransactionAdapter) Model(value interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Model(value)}
 }
 
 // GormTxAdapter adapts GORM transaction to our Tx interface
@@ -108,4 +124,24 @@ func (g *GormQueryAdapter) Pluck(column string, dest interface{}) Query {
 // First finds the first record
 func (g *GormQueryAdapter) First(dest interface{}, conds ...interface{}) Query {
 	return &GormQueryAdapter{db: g.db.First(dest, conds...)}
+}
+
+// Select specifies fields to be retrieved
+func (g *GormQueryAdapter) Select(query interface{}, args ...interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Select(query, args...)}
+}
+
+// Scan scans the result into the destination
+func (g *GormQueryAdapter) Scan(dest interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Scan(dest)}
+}
+
+// Group specifies the GROUP BY clause
+func (g *GormQueryAdapter) Group(query string) Query {
+	return &GormQueryAdapter{db: g.db.Group(query)}
+}
+
+// Where adds a WHERE clause
+func (g *GormQueryAdapter) Where(query interface{}, args ...interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Where(query, args...)}
 }
