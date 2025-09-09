@@ -1,0 +1,25 @@
+package templates
+
+// Home page
+templ HomePage() {
+	<div class="container-fluid">
+		<div class="row">
+			<div class="col-12">
+				<div class="jumbotron bg-light p-5 rounded">
+					<h1 class="display-4">Welcome to Requester</h1>
+					<p class="lead">Import and analyze HTTP requests from HAR files.</p>
+					<hr class="my-4">
+					<p>Get started by importing a HAR file to analyze your HTTP requests.</p>
+					<a class="btn btn-primary btn-lg" href="/dashboard/import" role="button">
+						<i class="bi bi-upload"></i> Import HAR File
+					</a>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// Home page with layout
+templ HomePageWithLayout() {
+	@LayoutWithNav("Home - App", HomePage(), "home")
+}

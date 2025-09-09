@@ -5,3 +5,4 @@ Requester
 __debug*
 web
 gorm.log
+cli

@@ -2,19 +2,17 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"linn221/Requester/requests"
-	"linn221/Requester/views"
+	"linn221/Requester/handlers"
+	"linn221/Requester/services"
+	"linn221/Requester/views/templates"
 	"log"
 	"net/http"
 	"runtime/debug"
 	"strconv"
-	"strings"
 )
 
 func MakeAuthMiddleware(secret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
-
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookiesSecret, err := r.Cookie("secret")
 			if err != nil {
@@ -50,14 +48,18 @@ func RecoveryMiddleware(next http.Handler) http.Handler {
 }
 
 func makeDashboardRoutes(app *App, mux *http.ServeMux) {
+	// Create handlers
+	importJobsHandler := handlers.NewImportJobsHandler(app.services)
+	requestsHandler := handlers.NewRequestsHandler(app.services)
+
 	// Home page - check if it's an HTMX request
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("HX-Request") == "true" {
 			// HTMX request - return just the content
-			views.HomePage().Render(r.Context(), w)
+			templates.HomePage().Render(r.Context(), w)
 		} else {
 			// Direct visit - return full page with layout
-			views.Layout("Home - App", views.HomePage()).Render(r.Context(), w)
+			templates.LayoutWithNav("Home - App", templates.HomePage(), "home").Render(r.Context(), w)
 		}
 	})
 
@@ -65,10 +67,10 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 	mux.HandleFunc("GET /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
 		if r.Header.Get("HX-Request") == "true" {
 			// HTMX request - return just the form
-			return views.ImportForm().Render(r.Context(), w)
+			return templates.ImportForm().Render(r.Context(), w)
 		} else {
 			// Direct visit - return full page with layout
-			return views.ImportFormPage().Render(r.Context(), w)
+			return templates.ImportFormPage().Render(r.Context(), w)
 		}
 	}))
 
@@ -76,9 +78,14 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 		return handleImport(app, w, r)
 	}))
 
+	// Import jobs list - check if it's an HTMX request
+	mux.HandleFunc("GET /import-jobs", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return importJobsHandler.HandleImportJobsList(w, r)
+	}))
+
 	// Requests list - check if it's an HTMX request
-	mux.HandleFunc("GET /requests/{importJobId}", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
-		return handleRequestsList(app, w, r)
+	mux.HandleFunc("GET /requests", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return requestsHandler.HandleRequestsList(w, r)
 	}))
 
 	// Request detail - check if it's an HTMX request
@@ -88,185 +95,25 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 }
 
 func handleImport(app *App, w http.ResponseWriter, r *http.Request) error {
-	// Parse multipart form
-	err := r.ParseMultipartForm(32 << 20) // 32 MB max
+	// Parse form using service
+	importReq, err := app.services.FormParser.ParseImportForm(services.NewHTTPRequestAdapter(r))
 	if err != nil {
-		return fmt.Errorf("failed to parse form: %v", err)
+		return err
 	}
 
-	// Get form values
-	title := r.FormValue("title")
-	if title == "" {
-		return fmt.Errorf("title is required")
-	}
-
-	ignoredHeadersText := r.FormValue("ignoredHeaders")
-	ignoredHeaders := strings.Fields(strings.ReplaceAll(ignoredHeadersText, "\n", " "))
-
-	// Get uploaded file
-	file, header, err := r.FormFile("harfile")
+	// Import HAR using service
+	result, err := app.services.ImportService.ImportHAR(r.Context(), *importReq)
 	if err != nil {
-		return fmt.Errorf("failed to get uploaded file: %v", err)
-	}
-	defer file.Close()
-
-	// Check file extension
-	if !strings.HasSuffix(strings.ToLower(header.Filename), ".har") {
-		return fmt.Errorf("file must be a .har file")
-	}
-
-	// Read file content
-	fileContent, err := io.ReadAll(file)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %v", err)
-	}
-
-	// Create transaction with context
-	tx := app.db.WithContext(r.Context()).Begin()
-	if tx.Error != nil {
-		return fmt.Errorf("failed to begin transaction: %v", tx.Error)
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-			panic(r)
-		}
-	}()
-
-	// Create ImportJob record
-	importJob := requests.ImportJob{
-		Title:          title,
-		IgnoredHeaders: strings.Join(ignoredHeaders, ","),
-	}
-
-	// Save ImportJob to database
-	if err := tx.Create(&importJob).Error; err != nil {
-		return fmt.Errorf("failed to create import job: %v", err)
-	}
-
-	// Create resHashFunc that uses ignored headers
-	resHashFunc := func(my *requests.TempMyRequest) (string, string) {
-		// Request text with filtered headers
-		reqText := my.URL + " " + my.Method + " " + my.ReqBody + " " + my.ReqHeaders.EchoFilter(ignoredHeaders...)
-
-		// Response text with filtered headers
-		respText := fmt.Sprintf("%d %d %s %s",
-			my.ResStatus, my.RespSize, my.ResBody, my.ResHeaders.EchoFilter(ignoredHeaders...),
-		)
-		return reqText, respText
-	}
-
-	// Parse HAR file
-	tempResults, err := requests.ParseHAR(fileContent, resHashFunc)
-	if err != nil {
-		return fmt.Errorf("failed to parse HAR file: %v", err)
-	}
-
-	// Convert TempMyRequest to MyRequest and save to database
-	var dbResults []requests.MyRequest
-	for _, tempReq := range tempResults {
-		dbReq, err := tempReq.ToMyRequest(importJob.ID)
-		if err != nil {
-			return fmt.Errorf("failed to convert request to database format: %v", err)
-		}
-		dbResults = append(dbResults, *dbReq)
-	}
-
-	// Save all requests to database in batch
-	if err := tx.CreateInBatches(dbResults, 100).Error; err != nil {
-		return fmt.Errorf("failed to save requests to database: %v", err)
-	}
-
-	// Commit transaction
-	if err := tx.Commit().Error; err != nil {
-		tx.Rollback()
-		return fmt.Errorf("failed to commit transaction: %v", err)
-	}
-
-	// Generate summary
-	summary := generateImportSummary(tempResults, title)
-
-	// Check if it's an HTMX request
-	if r.Header.Get("HX-Request") == "true" {
-		// HTMX request - return just the content
-		return views.ImportResult(title, len(tempResults), countUniqueDomains(tempResults), summary, importJob.ID).Render(r.Context(), w)
-	} else {
-		// Direct visit - return full page with layout
-		return views.ImportResultPage(title, len(tempResults), countUniqueDomains(tempResults), summary, importJob.ID).Render(r.Context(), w)
-	}
-}
-
-func generateImportSummary(results []requests.TempMyRequest, title string) string {
-	var summary strings.Builder
-	summary.WriteString(fmt.Sprintf("HAR Import Summary for: %s\n", title))
-	summary.WriteString(fmt.Sprintf("Total Requests: %d\n", len(results)))
-	summary.WriteString(fmt.Sprintf("Unique Domains: %d\n", countUniqueDomains(results)))
-	summary.WriteString("\nDomain Breakdown:\n")
-
-	domainCounts := make(map[string]int)
-	for _, req := range results {
-		domainCounts[req.Domain]++
-	}
-
-	for domain, count := range domainCounts {
-		summary.WriteString(fmt.Sprintf("  %s: %d requests\n", domain, count))
-	}
-
-	summary.WriteString("\nMethod Breakdown:\n")
-	methodCounts := make(map[string]int)
-	for _, req := range results {
-		methodCounts[req.Method]++
-	}
-
-	for method, count := range methodCounts {
-		summary.WriteString(fmt.Sprintf("  %s: %d requests\n", method, count))
-	}
-
-	summary.WriteString("\nStatus Code Breakdown:\n")
-	statusCounts := make(map[int]int)
-	for _, req := range results {
-		statusCounts[req.ResStatus]++
-	}
-
-	for status, count := range statusCounts {
-		summary.WriteString(fmt.Sprintf("  %d: %d responses\n", status, count))
-	}
-
-	return summary.String()
-}
-
-func countUniqueDomains(results []requests.TempMyRequest) int {
-	domains := make(map[string]bool)
-	for _, req := range results {
-		domains[req.Domain] = true
-	}
-	return len(domains)
-}
-
-func handleRequestsList(app *App, w http.ResponseWriter, r *http.Request) error {
-	// Extract importJobId from URL
-	importJobIdStr := r.PathValue("importJobId")
-	importJobId, err := strconv.ParseUint(importJobIdStr, 10, 32)
-	if err != nil {
-		return fmt.Errorf("invalid import job ID: %v", err)
-	}
-
-	// Create transaction with context
-	tx := app.db.WithContext(r.Context())
-
-	// Fetch requests for the import job
-	var requests []requests.MyRequest
-	if err := tx.Where("import_job_id = ?", importJobId).Order("sequence ASC").Find(&requests).Error; err != nil {
-		return fmt.Errorf("failed to fetch requests: %v", err)
+		return err
 	}
 
 	// Check if it's an HTMX request
 	if r.Header.Get("HX-Request") == "true" {
 		// HTMX request - return just the content
-		return views.RequestsList(requests).Render(r.Context(), w)
+		return templates.ImportResult(importReq.Title, result.RequestCount, result.UniqueDomains, result.Summary, result.ImportJobID).Render(r.Context(), w)
 	} else {
 		// Direct visit - return full page with layout
-		return views.RequestsListPage(requests).Render(r.Context(), w)
+		return templates.ImportResultPage(importReq.Title, result.RequestCount, result.UniqueDomains, result.Summary, result.ImportJobID).Render(r.Context(), w)
 	}
 }
 
@@ -278,22 +125,19 @@ func handleRequestDetail(app *App, w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("invalid request ID: %v", err)
 	}
 
-	// Create transaction with context
-	tx := app.db.WithContext(r.Context())
-
-	// Fetch the specific request
-	var request requests.MyRequest
-	if err := tx.First(&request, id).Error; err != nil {
-		return fmt.Errorf("failed to fetch request: %v", err)
+	// Fetch request using service
+	request, err := app.services.RequestService.GetRequestByID(r.Context(), uint(id))
+	if err != nil {
+		return err
 	}
 
 	// Check if it's an HTMX request
 	if r.Header.Get("HX-Request") == "true" {
 		// HTMX request - return just the content
-		return views.RequestDetail(request).Render(r.Context(), w)
+		return templates.RequestDetail(*request).Render(r.Context(), w)
 	} else {
 		// Direct visit - return full page with layout
-		return views.RequestDetailPage(request).Render(r.Context(), w)
+		return templates.RequestDetailPage(*request).Render(r.Context(), w)
 	}
 }
 

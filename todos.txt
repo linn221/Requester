@@ -1,0 +1,3 @@
+[ ] Polymorphic model Note, CRUD under NoteDetails for now
+[ ] Endpoint routes, each request having endpoint_id, editing the request.
+[ ] Get requests by hashes, make hashes clickable

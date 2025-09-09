@@ -1,0 +1,107 @@
+package templates
+
+import "strconv"
+
+// Import form page
+templ ImportFormPage() {
+	@LayoutWithNav("Import HAR - App", ImportForm(), "import")
+}
+
+// Import form component
+templ ImportForm() {
+	<div class="container-fluid">
+		<div class="row justify-content-center">
+			<div class="col-md-8 col-lg-6">
+				<div class="card">
+					<div class="card-header">
+						<h4 class="mb-0">Import HAR File</h4>
+					</div>
+					<div class="card-body">
+						<form hx-post="/dashboard/import" hx-target="#main" hx-swap="innerHTML" enctype="multipart/form-data">
+							<div class="mb-3">
+								<label for="title" class="form-label">Import Title</label>
+								<input type="text" class="form-control" id="title" name="title" required placeholder="Enter a title for this import">
+							</div>
+							<div class="mb-3">
+								<label for="harfile" class="form-label">HAR File</label>
+								<input type="file" class="form-control" id="harfile" name="harfile" accept=".har" required>
+								<div class="form-text">Select a .har file to import</div>
+							</div>
+							<div class="mb-3">
+								<label for="ignoredHeaders" class="form-label">Ignored Headers (optional)</label>
+								<textarea class="form-control" id="ignoredHeaders" name="ignoredHeaders" rows="3" placeholder="Enter headers to ignore during import, one per line or space-separated"></textarea>
+								<div class="form-text">Headers to ignore when calculating request/response hashes</div>
+							</div>
+							<div class="d-grid">
+								<button type="submit" class="btn btn-primary">
+									<i class="bi bi-upload"></i> Import HAR File
+								</button>
+							</div>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// Import result page
+templ ImportResultPage(title string, totalRequests int, uniqueDomains int, summary string, importJobId uint) {
+	@LayoutWithNav("Import Result - App", ImportResult(title, totalRequests, uniqueDomains, summary, importJobId), "import")
+}
+
+// Import result component
+templ ImportResult(title string, totalRequests int, uniqueDomains int, summary string, importJobId uint) {
+	<div class="container-fluid">
+		<div class="row justify-content-center">
+			<div class="col-md-10 col-lg-8">
+				<div class="card">
+					<div class="card-header">
+						<h4 class="mb-0">Import Complete</h4>
+					</div>
+					<div class="card-body">
+						<div class="alert alert-success">
+							<i class="bi bi-check-circle"></i>
+							<strong>Success!</strong> HAR file imported successfully.
+						</div>
+						
+						<div class="row mb-4">
+							<div class="col-md-4">
+								<div class="text-center">
+									<div class="h3 text-primary">{ strconv.Itoa(totalRequests) }</div>
+									<div class="text-muted">Total Requests</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="text-center">
+									<div class="h3 text-success">{ strconv.Itoa(uniqueDomains) }</div>
+									<div class="text-muted">Unique Domains</div>
+								</div>
+							</div>
+							<div class="col-md-4">
+								<div class="text-center">
+									<div class="h3 text-info">{ title }</div>
+									<div class="text-muted">Import Title</div>
+								</div>
+							</div>
+						</div>
+
+						<div class="mb-4">
+							<h5>Summary</h5>
+							<pre class="bg-light p-3 rounded">{ summary }</pre>
+						</div>
+
+						<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+							<a href="/dashboard/import" class="btn btn-outline-secondary">
+								<i class="bi bi-arrow-left"></i> Import Another
+							</a>
+							<a href={ "/dashboard/requests/" + strconv.FormatUint(uint64(importJobId), 10) } class="btn btn-primary">
+								<i class="bi bi-list-ul"></i> View Requests
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
