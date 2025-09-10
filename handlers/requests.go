@@ -29,18 +29,35 @@ func (h *RequestsHandler) HandleRequestsList(w http.ResponseWriter, r *http.Requ
 	endpointIDStr := r.URL.Query().Get("endpoint_id")
 	search := r.URL.Query().Get("search")
 
+	// Parse array parameters
+	endpointIDs := r.URL.Query()["endpoint_ids[]"]
+	methods := r.URL.Query()["methods[]"]
+	statuses := r.URL.Query()["statuses[]"]
+	types := r.URL.Query()["types[]"]
+	sizeMin := r.URL.Query().Get("size_min")
+	sizeMax := r.URL.Query().Get("size_max")
+
 	// Parse multi-order parameters
 	orders := h.parseMultiOrderParams(r)
 
 	var requests []requests.MyRequest
 	var pageTitle string
 
-	// Check if filtering by endpoint_id
+	// Get all endpoints for the dropdown
+	endpoints, err := h.services.EndpointService.GetAllEndpoints(r.Context())
+	if err != nil {
+		return err
+	}
+
+	// Check if filtering by endpoint_id (legacy single endpoint)
 	if endpointIDStr != "" && endpointIDStr != "0" {
 		endpointID, err := strconv.ParseUint(endpointIDStr, 10, 32)
 		if err != nil {
 			return fmt.Errorf("invalid endpoint ID: %v", err)
 		}
+
+		// Convert legacy single endpoint_id to array format
+		endpointIDs = []string{endpointIDStr}
 
 		// Fetch requests by endpoint with multi-order
 		requests, err = h.services.RequestService.GetRequestsByEndpointWithMultiOrderAndSearch(r.Context(), uint(endpointID), orders, search)
@@ -48,6 +65,29 @@ func (h *RequestsHandler) HandleRequestsList(w http.ResponseWriter, r *http.Requ
 			return err
 		}
 		pageTitle = "Endpoint Requests"
+	} else if len(endpointIDs) > 0 {
+		// New multi-endpoint filtering
+		// Convert string IDs to uint
+		var endpointIDUints []uint
+		for _, idStr := range endpointIDs {
+			if idStr != "" && idStr != "0" {
+				id, err := strconv.ParseUint(idStr, 10, 32)
+				if err != nil {
+					continue // Skip invalid IDs
+				}
+				endpointIDUints = append(endpointIDUints, uint(id))
+			}
+		}
+
+		if len(endpointIDUints) > 0 {
+			// TODO: Implement GetRequestsByEndpointsWithFilters in service
+			// For now, use the first endpoint
+			requests, err = h.services.RequestService.GetRequestsByEndpointWithMultiOrderAndSearch(r.Context(), endpointIDUints[0], orders, search)
+			if err != nil {
+				return err
+			}
+			pageTitle = "Filtered Requests"
+		}
 	} else if importJobIDStr != "" && importJobIDStr != "0" {
 		importJobID, err := strconv.ParseUint(importJobIDStr, 10, 32)
 		if err != nil {
@@ -71,23 +111,23 @@ func (h *RequestsHandler) HandleRequestsList(w http.ResponseWriter, r *http.Requ
 	}
 
 	// Create filter state for template
-	filterState := h.createFilterState(importJobIDStr, endpointIDStr, search, orders)
+	filterState := h.createFilterState(importJobIDStr, endpointIDStr, search, orders, endpointIDs, methods, statuses, types, sizeMin, sizeMax)
 
 	// Check if it's an HTMX request
 	if r.Header.Get("HX-Request") == "true" {
 		// HTMX request - return just the content
-		return templates.RequestsList(requests, filterState, pageTitle).Render(r.Context(), w)
+		return templates.RequestsList(requests, filterState, pageTitle, endpoints).Render(r.Context(), w)
 	} else {
 		// Direct visit - return full page with layout
-		return templates.RequestsListPage(requests, filterState, pageTitle).Render(r.Context(), w)
+		return templates.RequestsListPage(requests, filterState, pageTitle, endpoints).Render(r.Context(), w)
 	}
 }
 
 // createFilterState creates the filter state for the template
-func (h *RequestsHandler) createFilterState(importJobID, endpointID, search string, orders []services.OrderClause) templates.FilterState {
+func (h *RequestsHandler) createFilterState(importJobID, endpointID, search string, orders []services.OrderClause, endpointIDs, methods, statuses, types []string, sizeMin, sizeMax string) templates.FilterState {
 	// Ensure we have at least 4 order slots, but only show the first one initially
 	orderClauses := make([]templates.OrderClause, 4)
-	
+
 	// Set the first order (always show this one)
 	if len(orders) > 0 {
 		orderClauses[0] = templates.OrderClause{
@@ -100,7 +140,7 @@ func (h *RequestsHandler) createFilterState(importJobID, endpointID, search stri
 			Direction: "desc",
 		}
 	}
-	
+
 	// Set additional orders if they exist
 	for i := 1; i < 4; i++ {
 		if i < len(orders) {
@@ -119,7 +159,12 @@ func (h *RequestsHandler) createFilterState(importJobID, endpointID, search stri
 	return templates.FilterState{
 		Search:      search,
 		ImportJobID: importJobID,
-		EndpointID:  endpointID,
+		EndpointIDs: endpointIDs,
+		Methods:     methods,
+		Statuses:    statuses,
+		Types:       types,
+		SizeMin:     sizeMin,
+		SizeMax:     sizeMax,
 		Orders:      orderClauses,
 	}
 }

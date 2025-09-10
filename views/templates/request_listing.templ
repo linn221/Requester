@@ -13,28 +13,36 @@ type OrderClause struct {
 type FilterState struct {
 	Search      string
 	ImportJobID string
-	EndpointID  string
+	EndpointIDs []string
+	Methods     []string
+	Statuses    []string
+	Types       []string
+	SizeMin     string
+	SizeMax     string
 	Orders      []OrderClause
 }
 
 // Request listing page
-templ RequestsListPage(requests []requests.MyRequest, filterState FilterState, pageTitle string) {
-	@LayoutWithNav(pageTitle + " - App", RequestsList(requests, filterState, pageTitle), "requests")
+templ RequestsListPage(requests []requests.MyRequest, filterState FilterState, pageTitle string, endpoints []requests.Endpoint) {
+	@LayoutWithNav(pageTitle, RequestsList(requests, filterState, pageTitle, endpoints), "requests")
 }
 
 // Request listing component
-templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageTitle string) {
+templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageTitle string, endpoints []requests.Endpoint) {
 	<div class="container-fluid" x-data="{ 
 		expandedURLs: {},
+		showAdvancedFilters: false,
 		filters: {
-			search: '{ filterState.Search }',
-			importJobID: '{ filterState.ImportJobID }',
-			endpointID: '{ filterState.EndpointID }',
+			search: '',
+			importJobID: '',
+			endpointIDs: [],
+			methods: [],
+			statuses: [],
+			types: [],
+			sizeMin: '',
+			sizeMax: '',
 			orders: [
-				{ column: '{ filterState.Orders[0].Column }', direction: '{ filterState.Orders[0].Direction }' },
-				{ column: '{ filterState.Orders[1].Column }', direction: '{ filterState.Orders[1].Direction }' },
-				{ column: '{ filterState.Orders[2].Column }', direction: '{ filterState.Orders[2].Direction }' },
-				{ column: '{ filterState.Orders[3].Column }', direction: '{ filterState.Orders[3].Direction }' }
+				{ column: 'created_at', direction: 'desc' }
 			]
 		},
 		availableColumns: [
@@ -47,22 +55,39 @@ templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageT
 			{ value: 'domain', label: 'Domain' },
 			{ value: 'resp_size', label: 'Size' }
 		],
+		availableMethods: [
+			{ value: 'GET', label: 'GET' },
+			{ value: 'POST', label: 'POST' },
+			{ value: 'PUT', label: 'PUT' },
+			{ value: 'PATCH', label: 'PATCH' },
+			{ value: 'DELETE', label: 'DELETE' },
+			{ value: 'HEAD', label: 'HEAD' },
+			{ value: 'OPTIONS', label: 'OPTIONS' }
+		],
+		availableStatuses: [
+			{ value: '200', label: '200 - OK' },
+			{ value: '201', label: '201 - Created' },
+			{ value: '204', label: '204 - No Content' },
+			{ value: '301', label: '301 - Moved Permanently' },
+			{ value: '302', label: '302 - Found' },
+			{ value: '400', label: '400 - Bad Request' },
+			{ value: '401', label: '401 - Unauthorized' },
+			{ value: '403', label: '403 - Forbidden' },
+			{ value: '404', label: '404 - Not Found' },
+			{ value: '500', label: '500 - Internal Server Error' }
+		],
+		availableTypes: [
+			{ value: 'Web', label: 'Web' },
+			{ value: 'API', label: 'API' },
+			{ value: 'GraphQL', label: 'GraphQL' }
+		],
 		addOrderFilter() {
-			// Find first empty slot
-			for (let i = 0; i < this.filters.orders.length; i++) {
-				if (this.filters.orders[i].column === '') {
-					this.filters.orders[i] = { column: 'created_at', direction: 'desc' };
-					break;
-				}
-			}
+			// Add a new order filter
+			this.filters.orders.push({ column: 'created_at', direction: 'desc' });
 		},
 		removeOrderFilter(index) {
-			// Shift remaining filters up
-			for (let i = index; i < this.filters.orders.length - 1; i++) {
-				this.filters.orders[i] = this.filters.orders[i + 1];
-			}
-			// Clear last slot
-			this.filters.orders[this.filters.orders.length - 1] = { column: '', direction: 'desc' };
+			// Remove the order filter at the given index
+			this.filters.orders.splice(index, 1);
 		},
 		buildFilterURL() {
 			const params = new URLSearchParams();
@@ -72,14 +97,57 @@ templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageT
 				params.append('search', this.filters.search);
 			}
 			
-			// Add import job ID only if not empty
-			if (this.filters.importJobID && this.filters.importJobID !== '' && this.filters.importJobID !== '0') {
+			// Add import job ID only if not empty, zero, undefined, or null
+			if (this.filters.importJobID && 
+				this.filters.importJobID !== '' && 
+				this.filters.importJobID !== '0' && 
+				this.filters.importJobID !== 'undefined' && 
+				this.filters.importJobID !== 'null') {
 				params.append('import_job_id', this.filters.importJobID);
 			}
 			
-			// Add endpoint ID only if not empty
-			if (this.filters.endpointID && this.filters.endpointID !== '' && this.filters.endpointID !== '0') {
-				params.append('endpoint_id', this.filters.endpointID);
+			// Add endpoint IDs as array
+			if (this.filters.endpointIDs && this.filters.endpointIDs.length > 0) {
+				for (const endpointID of this.filters.endpointIDs) {
+					if (endpointID && endpointID !== '' && endpointID !== '0') {
+						params.append('endpoint_ids[]', endpointID);
+					}
+				}
+			}
+			
+			// Add methods as array
+			if (this.filters.methods && this.filters.methods.length > 0) {
+				for (const method of this.filters.methods) {
+					if (method && method !== '') {
+						params.append('methods[]', method);
+					}
+				}
+			}
+			
+			// Add statuses as array
+			if (this.filters.statuses && this.filters.statuses.length > 0) {
+				for (const status of this.filters.statuses) {
+					if (status && status !== '') {
+						params.append('statuses[]', status);
+					}
+				}
+			}
+			
+			// Add types as array
+			if (this.filters.types && this.filters.types.length > 0) {
+				for (const type of this.filters.types) {
+					if (type && type !== '') {
+						params.append('types[]', type);
+					}
+				}
+			}
+			
+			// Add size range
+			if (this.filters.sizeMin && this.filters.sizeMin !== '') {
+				params.append('size_min', this.filters.sizeMin);
+			}
+			if (this.filters.sizeMax && this.filters.sizeMax !== '') {
+				params.append('size_max', this.filters.sizeMax);
 			}
 			
 			// Add order parameters
@@ -98,6 +166,20 @@ templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageT
 			const url = this.buildFilterURL();
 			// Use HTMX to load the new results
 			htmx.ajax('GET', url, { target: '#requests-list', swap: 'outerHTML' });
+		},
+		init() {
+			// Initialize filters with server values
+			this.filters.search = '{ filterState.Search }';
+			this.filters.importJobID = '{ filterState.ImportJobID }';
+			this.filters.endpointIDs = { getEndpointIDsJS(filterState.EndpointIDs) };
+			this.filters.methods = { getMethodsJS(filterState.Methods) };
+			this.filters.statuses = { getStatusesJS(filterState.Statuses) };
+			this.filters.types = { getTypesJS(filterState.Types) };
+			this.filters.sizeMin = '{ filterState.SizeMin }';
+			this.filters.sizeMax = '{ filterState.SizeMax }';
+			this.filters.orders = [
+				{ column: '{ filterState.Orders[0].Column }', direction: '{ filterState.Orders[0].Direction }' }
+			];
 		}
 	}" id="requests-list">
 		<div class="row mb-4">
@@ -125,7 +207,6 @@ templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageT
 										placeholder="Search requests..." 
 										aria-label="Search requests"
 										x-model="filters.search"
-										value={ filterState.Search }
 									>
 									<button class="btn btn-outline-secondary" type="button" @click="executeQuery()">
 										<i class="bi bi-search"></i>
@@ -134,18 +215,33 @@ templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageT
 							</div>
 						</div>
 
+						<!-- Endpoint Filter -->
+						<div class="row mb-3">
+							<div class="col-12">
+								<label class="form-label fw-bold">Endpoints</label>
+								<select class="form-select" multiple x-model="filters.endpointIDs" size="4">
+									for _, endpoint := range endpoints {
+										<option value={ strconv.FormatUint(uint64(endpoint.ID), 10) }>
+											{ endpoint.Method } { endpoint.Domain }{ endpoint.URI } ({ endpoint.EndpointType })
+										</option>
+									}
+								</select>
+								<small class="form-text text-muted">Hold Ctrl/Cmd to select multiple endpoints</small>
+							</div>
+						</div>
+
 						<!-- Order Filters -->
 						<div class="row mb-3">
 							<div class="col-12">
 								<div class="d-flex justify-content-between align-items-center mb-2">
 									<label class="form-label fw-bold mb-0">Order By</label>
-									<button type="button" class="btn btn-sm btn-outline-primary" @click="addOrderFilter()" x-show="filters.orders.some(order => order.column === '')">
+									<button type="button" class="btn btn-sm btn-outline-primary" @click="addOrderFilter()" x-show="filters.orders.length < 4">
 										<i class="bi bi-plus"></i> Add Order
 									</button>
 								</div>
 								
 								<template x-for="(order, index) in filters.orders" :key="index">
-									<div class="row mb-2" x-show="order.column !== '' || index === 0">
+									<div class="row mb-2">
 										<div class="col-md-5">
 											<select class="form-select" x-model="order.column">
 												<template x-for="col in availableColumns" :key="col.value">
@@ -160,7 +256,7 @@ templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageT
 											</select>
 										</div>
 										<div class="col-md-2">
-											<button type="button" class="btn btn-outline-danger btn-sm" @click="removeOrderFilter(index)" x-show="index > 0">
+											<button type="button" class="btn btn-outline-danger btn-sm" @click="removeOrderFilter(index)" x-show="filters.orders.length > 1">
 												<i class="bi bi-trash"></i> Remove
 											</button>
 										</div>
@@ -169,13 +265,67 @@ templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageT
 							</div>
 						</div>
 
-						<!-- Future Filters Placeholder -->
+						<!-- Advanced Filters Toggle -->
 						<div class="row mb-3">
 							<div class="col-12">
-								<label class="form-label fw-bold text-muted">Additional Filters (Coming Soon)</label>
-								<div class="alert alert-info mb-0">
-									<i class="bi bi-info-circle"></i> 
-									Future filters will include: Status, Method, Type, Size, and more.
+								<button type="button" class="btn btn-outline-secondary" @click="showAdvancedFilters = !showAdvancedFilters">
+									<i class="bi" :class="showAdvancedFilters ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
+									Show Advanced Filters
+								</button>
+							</div>
+						</div>
+
+						<!-- Advanced Filters Section -->
+						<div x-show="showAdvancedFilters" class="row mb-3">
+							<div class="col-12">
+								<div class="card border-secondary">
+									<div class="card-header bg-light">
+										<h6 class="mb-0">Advanced Filters</h6>
+									</div>
+									<div class="card-body">
+										<!-- Method Filter -->
+										<div class="row mb-3">
+											<div class="col-md-6">
+												<label class="form-label fw-bold">Methods</label>
+												<select class="form-select" multiple x-model="filters.methods" size="3">
+													<template x-for="method in availableMethods" :key="method.value">
+														<option :value="method.value" x-text="method.label"></option>
+													</template>
+												</select>
+											</div>
+											<div class="col-md-6">
+												<label class="form-label fw-bold">Status Codes</label>
+												<select class="form-select" multiple x-model="filters.statuses" size="3">
+													<template x-for="status in availableStatuses" :key="status.value">
+														<option :value="status.value" x-text="status.label"></option>
+													</template>
+												</select>
+											</div>
+										</div>
+
+										<!-- Type and Size Filters -->
+										<div class="row mb-3">
+											<div class="col-md-6">
+												<label class="form-label fw-bold">Endpoint Types</label>
+												<select class="form-select" multiple x-model="filters.types" size="3">
+													<template x-for="type in availableTypes" :key="type.value">
+														<option :value="type.value" x-text="type.label"></option>
+													</template>
+												</select>
+											</div>
+											<div class="col-md-6">
+												<label class="form-label fw-bold">Response Size Range (bytes)</label>
+												<div class="row">
+													<div class="col-6">
+														<input type="number" class="form-control" placeholder="Min" x-model="filters.sizeMin">
+													</div>
+													<div class="col-6">
+														<input type="number" class="form-control" placeholder="Max" x-model="filters.sizeMax">
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>

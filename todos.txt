@@ -3,12 +3,12 @@
 [ ] Get requests by hashes, make hashes clickable
 [ ] CRUD program model, each import job will ask for program_id, and endpoints and requests created will also have the program_id.
 
-I want to add Program model, that have the fields Name, Url, Notes, Scope, Domains. ImportJob, Endpoint, Request will all have ProgramId. Create CRUD pages for Program. At the Import Job form, add program_id input field, and users must select the program. When processing the form, you will set the input program_id as the program_id of ImportJob and the resulting Endpoints and Requests. You should update the existing UI by displaying the Program Name in ImportJobs, Requests and Endpoints, by a hyperlink that will go to the program's listing page. 
+Finally, I want to add Program model, that have the fields Name, Url, Notes, Scope, Domains. ImportJob, Endpoint, Request will all have ProgramId. Create CRUD pages for Program. At the Import Job form, add program_id input field, and users must select the program. When processing the form, you will set the input program_id as the program_id of ImportJob and the resulting Endpoints and Requests.
 
 
 Create a new model Endpoint, which will have Id, Method, Domain, Uri, EndpointType of enum(Web,Api,GraphQL), Notes. Request model will have EndpointId field. And when importing har file, check if an Endpoint with the request Domain,Method and Uri(without query parameter part) exist, if exists, use the existing EndpointId when storing the Request. If not, create the Endpoint and then store it. Add Endpoints in navbar, listing each endpoint and you can view the requests of the selected endpoint, via requests?endpoint_id=4. Implement the server side code as well. In summary, I want to associate with a new Endpoint type to each request for querying related requests information.
 
 On the listing page, hx-target must be the root of your component, and hx-swap, outerHTML. Since the hx-get will respond with the whole component, the UI end up with duplicate section when swapping with the current hx-target. Now that you have learned how hx-target works, find other bugs like this happening in the template code.
 
-Uncaught SyntaxError: redeclaration of const createApp
 
+Set the import job title as HTML title for request listing page. Also the literal '{ filterState.Search }' is still there for Search. Do not apply endpoint_id or import_job_id, etc if their value is 0, undefined or null, that is, remove ?endpoint_id=0. The generated Query url has been malformed, '/dashboard/requests?search=%7B+filterState.Search+%7D&import_job_id=%7B+filterState.ImportJobID+%7D&endpoint_id=%7B+filterState.EndpointID+%7D&order_0=%7B+filterState.Orders%5B0%5D.Column+%7D&direction_0=%7B+filterState.Orders%5B0%5D.Direction+%7D'. Take care of it. Like I previously stated, order_by rows can be 1 or 4, and your query must reflect that.

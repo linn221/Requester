@@ -17,9 +17,18 @@ templ RequestDetail(request requests.MyRequest) {
 				reqBody: false,
 				resBody: false
 			},
+			showRendered: false,
+			activeTab: 'source',
 			notes: '',
+			resBody: '{ request.ResBody }',
 			toggleSection(section) {
 				this.expandedSections[section] = !this.expandedSections[section];
+			},
+			toggleRender() {
+				this.showRendered = !this.showRendered;
+			},
+			setActiveTab(tab) {
+				this.activeTab = tab;
 			},
 			goBack() {
 				history.back();
@@ -157,11 +166,29 @@ templ RequestDetail(request requests.MyRequest) {
 					<div class="card-body">
 						<!-- Collapsed View -->
 						<div x-show="!expandedSections.reqHeaders" class="content-preview">
-							<pre class="small mb-0">{ request.ReqHeaders }</pre>
+							<div class="small mb-0 text-muted">
+								if len(parseHeaders(request.ReqHeaders)) == 0 {
+									"No headers"
+								} else {
+									for _, header := range parseHeaders(request.ReqHeaders) {
+										<strong>{ header["name"] }</strong>: { header["value"] }
+										<br/>
+									}
+								}
+							</div>
 						</div>
 						<!-- Expanded View -->
 						<div x-show="expandedSections.reqHeaders" class="content-expanded">
-							<pre class="small mb-0">{ request.ReqHeaders }</pre>
+							<div class="small mb-0 text-muted">
+								if len(parseHeaders(request.ReqHeaders)) == 0 {
+									"No headers"
+								} else {
+									for _, header := range parseHeaders(request.ReqHeaders) {
+										<strong>{ header["name"] }</strong>: { header["value"] }
+										<br/>
+									}
+								}
+							</div>
 						</div>
 						<button class="btn btn-outline-secondary btn-sm view-more-btn mt-2" @click="toggleSection('reqHeaders')">
 							<span x-show="!expandedSections.reqHeaders">View More <i class="bi bi-chevron-down"></i></span>
@@ -188,11 +215,29 @@ templ RequestDetail(request requests.MyRequest) {
 					<div class="card-body">
 						<!-- Collapsed View -->
 						<div x-show="!expandedSections.resHeaders" class="content-preview">
-							<pre class="small mb-0">{ request.ResHeaders }</pre>
+							<div class="small mb-0 text-muted">
+								if len(parseHeaders(request.ResHeaders)) == 0 {
+									"No headers"
+								} else {
+									for _, header := range parseHeaders(request.ResHeaders) {
+										<strong>{ header["name"] }</strong>: { header["value"] }
+										<br/>
+									}
+								}
+							</div>
 						</div>
 						<!-- Expanded View -->
 						<div x-show="expandedSections.resHeaders" class="content-expanded">
-							<pre class="small mb-0">{ request.ResHeaders }</pre>
+							<div class="small mb-0 text-muted">
+								if len(parseHeaders(request.ResHeaders)) == 0 {
+									"No headers"
+								} else {
+									for _, header := range parseHeaders(request.ResHeaders) {
+										<strong>{ header["name"] }</strong>: { header["value"] }
+										<br/>
+									}
+								}
+							</div>
 						</div>
 						<button class="btn btn-outline-secondary btn-sm view-more-btn mt-2" @click="toggleSection('resHeaders')">
 							<span x-show="!expandedSections.resHeaders">View More <i class="bi bi-chevron-down"></i></span>
@@ -250,18 +295,62 @@ templ RequestDetail(request requests.MyRequest) {
 						</div>
 					</div>
 					<div class="card-body">
-						<!-- Collapsed View -->
-						<div x-show="!expandedSections.resBody" class="content-preview">
-							<pre class="small mb-0">{ request.ResBody }</pre>
+						<!-- Tabs for JSON/HTML content -->
+						if isJSONContent(request.ResHeaders) || isHTMLContent(request.ResHeaders) {
+							<ul class="nav nav-tabs mb-3">
+								<li class="nav-item">
+									<button class="nav-link" :class="activeTab === 'source' ? 'active' : ''" @click="setActiveTab('source')">
+										Source
+									</button>
+								</li>
+								if isJSONContent(request.ResHeaders) {
+									<li class="nav-item">
+										<button class="nav-link" :class="activeTab === 'json' ? 'active' : ''" @click="setActiveTab('json')">
+											JSON
+										</button>
+									</li>
+								}
+								if isHTMLContent(request.ResHeaders) {
+									<li class="nav-item">
+										<button class="nav-link" :class="activeTab === 'html' ? 'active' : ''" @click="setActiveTab('html')">
+											HTML
+										</button>
+									</li>
+								}
+							</ul>
+						}
+						<!-- Tab Content -->
+						<!-- Source Tab -->
+						<div x-show="activeTab === 'source'">
+							<!-- Collapsed View -->
+							<div x-show="!expandedSections.resBody" class="content-preview">
+								<pre class="small mb-0">{ request.ResBody }</pre>
+							</div>
+							<!-- Expanded View -->
+							<div x-show="expandedSections.resBody" class="content-expanded">
+								<pre class="small mb-0">{ request.ResBody }</pre>
+							</div>
+							<button class="btn btn-outline-secondary btn-sm view-more-btn mt-2" @click="toggleSection('resBody')">
+								<span x-show="!expandedSections.resBody">View More <i class="bi bi-chevron-down"></i></span>
+								<span x-show="expandedSections.resBody">View Less <i class="bi bi-chevron-up"></i></span>
+							</button>
 						</div>
-						<!-- Expanded View -->
-						<div x-show="expandedSections.resBody" class="content-expanded">
-							<pre class="small mb-0">{ request.ResBody }</pre>
-						</div>
-						<button class="btn btn-outline-secondary btn-sm view-more-btn mt-2" @click="toggleSection('resBody')">
-							<span x-show="!expandedSections.resBody">View More <i class="bi bi-chevron-down"></i></span>
-							<span x-show="expandedSections.resBody">View Less <i class="bi bi-chevron-up"></i></span>
-						</button>
+						
+						<!-- JSON Tab -->
+						if isJSONContent(request.ResHeaders) {
+							<div x-show="activeTab === 'json'">
+								<pre class="small mb-0 bg-light p-3 rounded" style="max-height: 400px; overflow-y: auto;">{ formatJSON(request.ResBody) }</pre>
+							</div>
+						}
+						
+						<!-- HTML Tab -->
+						if isHTMLContent(request.ResHeaders) {
+							<div x-show="activeTab === 'html'">
+								<div class="border rounded p-3 bg-light" style="max-height: 400px; overflow-y: auto;">
+									<div x-html="resBody"></div>
+								</div>
+							</div>
+						}
 					</div>
 				</div>
 			</div>
