@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"net/url"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -84,3 +85,21 @@ func getContentType(headersJSON string) string {
 	
 	return "Unknown"
 }
+
+// truncateURL truncates a URL to the specified length and adds ellipsis
+func truncateURL(url string, maxLength int) string {
+	if len(url) <= maxLength {
+		return url
+	}
+	return url[:maxLength-3] + "..."
+}
+
+// ExtractURIWithoutQuery extracts the URI path without query parameters
+func ExtractURIWithoutQuery(fullURL string) string {
+	u, err := url.Parse(fullURL)
+	if err != nil {
+		return fullURL
+	}
+	return u.Path
+}
+

@@ -62,14 +62,14 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div id=\"app\" class=\"container-fluid\"><div class=\"row mb-4\"><div class=\"col-12\"><div class=\"d-flex justify-content-between align-items-center\"><div><button class=\"btn btn-outline-secondary btn-sm me-2\" @click=\"goBack\"><i class=\"bi bi-arrow-left\"></i> Back</button><h2 class=\"d-inline\">Request Details</h2></div><div><button class=\"btn btn-outline-primary btn-sm me-2\" @click=\"copyAsCurl\"><i class=\"bi bi-clipboard\"></i> Copy as cURL</button> <button class=\"btn btn-outline-secondary btn-sm me-2\" @click=\"openInVSCode\"><i class=\"bi bi-code-square\"></i> Open in VS Code</button></div></div></div></div><div class=\"row\"><!-- Request Information --><div class=\"col-lg-6 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Request Information</h5></div><div class=\"card-body\"><div class=\"row mb-3\"><div class=\"col-4\"><strong>Method:</strong></div><div class=\"col-8\"><span class=\"badge method-badge\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container-fluid\" x-data=\"{\n\t\t\texpandedSections: {\n\t\t\t\treqHeaders: false,\n\t\t\t\tresHeaders: false,\n\t\t\t\treqBody: false,\n\t\t\t\tresBody: false\n\t\t\t},\n\t\t\tnotes: '',\n\t\t\ttoggleSection(section) {\n\t\t\t\tthis.expandedSections[section] = !this.expandedSections[section];\n\t\t\t},\n\t\t\tgoBack() {\n\t\t\t\thistory.back();\n\t\t\t},\n\t\t\tcopyAsCurl() {\n\t\t\t\talert('Copy as cURL functionality will be implemented');\n\t\t\t},\n\t\t\topenInVSCode(section) {\n\t\t\t\talert('Open in VS Code functionality will be implemented for: ' + section);\n\t\t\t},\n\t\t\tcopyToClipboard(section) {\n\t\t\t\tconst sectionElement = document.querySelector('[data-section=' + section + ']');\n\t\t\t\tconst visiblePre = sectionElement.querySelector('.content-preview pre, .content-expanded pre');\n\t\t\t\tconst content = visiblePre ? visiblePre.textContent : '';\n\t\t\t\t\n\t\t\t\tnavigator.clipboard.writeText(content).then(() => {\n\t\t\t\t\tconst btn = event.target.closest('button');\n\t\t\t\t\tconst originalHTML = btn.innerHTML;\n\t\t\t\t\tbtn.innerHTML = '<i class=bi bi-check></i>';\n\t\t\t\t\tbtn.classList.add('btn-success');\n\t\t\t\t\tbtn.classList.remove('btn-outline-secondary');\n\t\t\t\t\tsetTimeout(() => {\n\t\t\t\t\t\tbtn.innerHTML = originalHTML;\n\t\t\t\t\t\tbtn.classList.remove('btn-success');\n\t\t\t\t\t\tbtn.classList.add('btn-outline-secondary');\n\t\t\t\t\t}, 1000);\n\t\t\t\t});\n\t\t\t},\n\t\t\taddNotes() {\n\t\t\t\talert('Add Notes functionality will be implemented. Notes: ' + this.notes);\n\t\t\t}\n\t\t }\"><div class=\"row mb-4\"><div class=\"col-12\"><div class=\"d-flex justify-content-between align-items-center\"><div><button class=\"btn btn-outline-secondary btn-sm me-2\" @click=\"goBack()\"><i class=\"bi bi-arrow-left\"></i> Back</button><h2 class=\"d-inline\">Request Details</h2></div><div><button class=\"btn btn-outline-primary btn-sm me-2\" @click=\"copyAsCurl()\"><i class=\"bi bi-clipboard\"></i> Copy as cURL</button> <button class=\"btn btn-outline-secondary btn-sm me-2\" @click=\"openInVSCode()\"><i class=\"bi bi-code-square\"></i> Open in VS Code</button></div></div></div></div><div class=\"row\"><!-- Request Information --><div class=\"col-lg-6 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Request Information</h5></div><div class=\"card-body\"><div class=\"row mb-3\"><div class=\"col-4\"><strong>Method:</strong></div><div class=\"col-8\"><span class=\"badge method-badge\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var3 string
 		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(request.Method)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 45, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 87, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 		if templ_7745c5c3_Err != nil {
@@ -82,7 +82,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(request.URL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 51, Col: 55}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 93, Col: 55}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
@@ -95,7 +95,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(request.Domain)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 56, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 98, Col: 42}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
@@ -108,7 +108,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(request.RequestTime)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 60, Col: 47}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 102, Col: 47}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -121,7 +121,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(request.ResStatus)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 76, Col: 60}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 118, Col: 60}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
@@ -134,7 +134,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(formatBytes(request.RespSize))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 81, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 123, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
@@ -147,7 +147,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var9 string
 		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(request.LatencyMs)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 85, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 127, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
@@ -160,7 +160,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var10 string
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(getContentType(request.ResHeaders))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 89, Col: 62}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 131, Col: 62}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -173,124 +173,124 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(formatDate(request.CreatedAt))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 93, Col: 57}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 135, Col: 57}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></div></div></div></div></div><div class=\"row\"><!-- Request Headers --><div class=\"col-lg-6 mb-4\" data-section=\"reqHeaders\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Request Headers</h5><div class=\"btn-group btn-group-sm\"><button class=\"btn btn-outline-secondary\" @click=\"openInVSCode('reqHeaders')\"><i class=\"bi bi-code-square\"></i></button> <button class=\"btn btn-outline-secondary\" @click=\"copyToClipboard('reqHeaders')\"><i class=\"bi bi-clipboard\"></i></button></div></div><div class=\"card-body\"><!-- Collapsed View --><div v-show=\"!expandedSections.reqHeaders\" class=\"content-preview\"><pre class=\"small mb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></div></div></div></div></div><div class=\"row\"><!-- Request Headers --><div class=\"col-lg-6 mb-4\" data-section=\"reqHeaders\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Request Headers</h5><div class=\"btn-group btn-group-sm\"><button class=\"btn btn-outline-secondary\" @click=\"openInVSCode('reqHeaders')\"><i class=\"bi bi-code-square\"></i></button> <button class=\"btn btn-outline-secondary\" @click=\"copyToClipboard('reqHeaders')\"><i class=\"bi bi-clipboard\"></i></button></div></div><div class=\"card-body\"><!-- Collapsed View --><div x-show=\"!expandedSections.reqHeaders\" class=\"content-preview\"><pre class=\"small mb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var12 string
 		templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(request.ReqHeaders)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 118, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 160, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</pre></div><!-- Expanded View --><div v-show=\"expandedSections.reqHeaders\" class=\"content-expanded\"><pre class=\"small mb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</pre></div><!-- Expanded View --><div x-show=\"expandedSections.reqHeaders\" class=\"content-expanded\"><pre class=\"small mb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var13 string
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(request.ReqHeaders)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 122, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 164, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</pre></div><button class=\"btn btn-outline-secondary btn-sm view-more-btn mt-2\" @click=\"toggleSection('reqHeaders')\"><span v-if=\"!expandedSections.reqHeaders\">View More <i class=\"bi bi-chevron-down\"></i></span> <span v-else>View Less <i class=\"bi bi-chevron-up\"></i></span></button></div></div></div><!-- Response Headers --><div class=\"col-lg-6 mb-4\" data-section=\"resHeaders\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Response Headers</h5><div class=\"btn-group btn-group-sm\"><button class=\"btn btn-outline-secondary\" @click=\"openInVSCode('resHeaders')\"><i class=\"bi bi-code-square\"></i></button> <button class=\"btn btn-outline-secondary\" @click=\"copyToClipboard('resHeaders')\"><i class=\"bi bi-clipboard\"></i></button></div></div><div class=\"card-body\"><!-- Collapsed View --><div v-show=\"!expandedSections.resHeaders\" class=\"content-preview\"><pre class=\"small mb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "</pre></div><button class=\"btn btn-outline-secondary btn-sm view-more-btn mt-2\" @click=\"toggleSection('reqHeaders')\"><span x-show=\"!expandedSections.reqHeaders\">View More <i class=\"bi bi-chevron-down\"></i></span> <span x-show=\"expandedSections.reqHeaders\">View Less <i class=\"bi bi-chevron-up\"></i></span></button></div></div></div><!-- Response Headers --><div class=\"col-lg-6 mb-4\" data-section=\"resHeaders\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Response Headers</h5><div class=\"btn-group btn-group-sm\"><button class=\"btn btn-outline-secondary\" @click=\"openInVSCode('resHeaders')\"><i class=\"bi bi-code-square\"></i></button> <button class=\"btn btn-outline-secondary\" @click=\"copyToClipboard('resHeaders')\"><i class=\"bi bi-clipboard\"></i></button></div></div><div class=\"card-body\"><!-- Collapsed View --><div x-show=\"!expandedSections.resHeaders\" class=\"content-preview\"><pre class=\"small mb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(request.ResHeaders)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 149, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 191, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</pre></div><!-- Expanded View --><div v-show=\"expandedSections.resHeaders\" class=\"content-expanded\"><pre class=\"small mb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "</pre></div><!-- Expanded View --><div x-show=\"expandedSections.resHeaders\" class=\"content-expanded\"><pre class=\"small mb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var15 string
 		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinStringErrs(request.ResHeaders)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 153, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 195, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</pre></div><button class=\"btn btn-outline-secondary btn-sm view-more-btn mt-2\" @click=\"toggleSection('resHeaders')\"><span v-if=\"!expandedSections.resHeaders\">View More <i class=\"bi bi-chevron-down\"></i></span> <span v-else>View Less <i class=\"bi bi-chevron-up\"></i></span></button></div></div></div></div><div class=\"row\"><!-- Request Body --><div class=\"col-lg-6 mb-4\" data-section=\"reqBody\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Request Body</h5><div class=\"btn-group btn-group-sm\"><button class=\"btn btn-outline-secondary\" @click=\"openInVSCode('reqBody')\"><i class=\"bi bi-code-square\"></i></button> <button class=\"btn btn-outline-secondary\" @click=\"copyToClipboard('reqBody')\"><i class=\"bi bi-clipboard\"></i></button></div></div><div class=\"card-body\"><!-- Collapsed View --><div v-show=\"!expandedSections.reqBody\" class=\"content-preview\"><pre class=\"small mb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</pre></div><button class=\"btn btn-outline-secondary btn-sm view-more-btn mt-2\" @click=\"toggleSection('resHeaders')\"><span x-show=\"!expandedSections.resHeaders\">View More <i class=\"bi bi-chevron-down\"></i></span> <span x-show=\"expandedSections.resHeaders\">View Less <i class=\"bi bi-chevron-up\"></i></span></button></div></div></div></div><div class=\"row\"><!-- Request Body --><div class=\"col-lg-6 mb-4\" data-section=\"reqBody\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Request Body</h5><div class=\"btn-group btn-group-sm\"><button class=\"btn btn-outline-secondary\" @click=\"openInVSCode('reqBody')\"><i class=\"bi bi-code-square\"></i></button> <button class=\"btn btn-outline-secondary\" @click=\"copyToClipboard('reqBody')\"><i class=\"bi bi-clipboard\"></i></button></div></div><div class=\"card-body\"><!-- Collapsed View --><div x-show=\"!expandedSections.reqBody\" class=\"content-preview\"><pre class=\"small mb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var16 string
 		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(request.ReqBody)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 182, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 224, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</pre></div><!-- Expanded View --><div v-show=\"expandedSections.reqBody\" class=\"content-expanded\"><pre class=\"small mb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</pre></div><!-- Expanded View --><div x-show=\"expandedSections.reqBody\" class=\"content-expanded\"><pre class=\"small mb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var17 string
 		templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(request.ReqBody)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 186, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 228, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</pre></div><button class=\"btn btn-outline-secondary btn-sm view-more-btn mt-2\" @click=\"toggleSection('reqBody')\"><span v-if=\"!expandedSections.reqBody\">View More <i class=\"bi bi-chevron-down\"></i></span> <span v-else>View Less <i class=\"bi bi-chevron-up\"></i></span></button></div></div></div><!-- Response Body --><div class=\"col-lg-6 mb-4\" data-section=\"resBody\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Response Body</h5><div class=\"btn-group btn-group-sm\"><button class=\"btn btn-outline-secondary\" @click=\"openInVSCode('resBody')\"><i class=\"bi bi-code-square\"></i></button> <button class=\"btn btn-outline-secondary\" @click=\"copyToClipboard('resBody')\"><i class=\"bi bi-clipboard\"></i></button></div></div><div class=\"card-body\"><!-- Collapsed View --><div v-show=\"!expandedSections.resBody\" class=\"content-preview\"><pre class=\"small mb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</pre></div><button class=\"btn btn-outline-secondary btn-sm view-more-btn mt-2\" @click=\"toggleSection('reqBody')\"><span x-show=\"!expandedSections.reqBody\">View More <i class=\"bi bi-chevron-down\"></i></span> <span x-show=\"expandedSections.reqBody\">View Less <i class=\"bi bi-chevron-up\"></i></span></button></div></div></div><!-- Response Body --><div class=\"col-lg-6 mb-4\" data-section=\"resBody\"><div class=\"card\"><div class=\"card-header d-flex justify-content-between align-items-center\"><h5 class=\"mb-0\">Response Body</h5><div class=\"btn-group btn-group-sm\"><button class=\"btn btn-outline-secondary\" @click=\"openInVSCode('resBody')\"><i class=\"bi bi-code-square\"></i></button> <button class=\"btn btn-outline-secondary\" @click=\"copyToClipboard('resBody')\"><i class=\"bi bi-clipboard\"></i></button></div></div><div class=\"card-body\"><!-- Collapsed View --><div x-show=\"!expandedSections.resBody\" class=\"content-preview\"><pre class=\"small mb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var18 string
 		templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(request.ResBody)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 213, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 255, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</pre></div><!-- Expanded View --><div v-show=\"expandedSections.resBody\" class=\"content-expanded\"><pre class=\"small mb-0\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "</pre></div><!-- Expanded View --><div x-show=\"expandedSections.resBody\" class=\"content-expanded\"><pre class=\"small mb-0\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var19 string
 		templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(request.ResBody)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 217, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 259, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</pre></div><button class=\"btn btn-outline-secondary btn-sm view-more-btn mt-2\" @click=\"toggleSection('resBody')\"><span v-if=\"!expandedSections.resBody\">View More <i class=\"bi bi-chevron-down\"></i></span> <span v-else>View Less <i class=\"bi bi-chevron-up\"></i></span></button></div></div></div></div><!-- Hashes --><div class=\"row\"><div class=\"col-12 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Hashes</h5></div><div class=\"card-body\"><div class=\"row\"><div class=\"col-md-3 mb-3\"><div class=\"small text-muted\">Request Hash</div><code class=\"small\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "</pre></div><button class=\"btn btn-outline-secondary btn-sm view-more-btn mt-2\" @click=\"toggleSection('resBody')\"><span x-show=\"!expandedSections.resBody\">View More <i class=\"bi bi-chevron-down\"></i></span> <span x-show=\"expandedSections.resBody\">View Less <i class=\"bi bi-chevron-up\"></i></span></button></div></div></div></div><!-- Hashes --><div class=\"row\"><div class=\"col-12 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Hashes</h5></div><div class=\"card-body\"><div class=\"row\"><div class=\"col-md-3 mb-3\"><div class=\"small text-muted\">Request Hash</div><code class=\"small\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var20 string
 		templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(request.ReqHash)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 239, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 281, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 		if templ_7745c5c3_Err != nil {
@@ -303,7 +303,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var21 string
 		templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(request.ResHash)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 243, Col: 45}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 285, Col: 45}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 		if templ_7745c5c3_Err != nil {
@@ -316,7 +316,7 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var22 string
 		templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(request.ReqHash1)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 247, Col: 46}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 289, Col: 46}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 		if templ_7745c5c3_Err != nil {
@@ -329,13 +329,13 @@ func RequestDetail(request requests.MyRequest) templ.Component {
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(request.ResBodyHash)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 251, Col: 49}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/request_details.templ`, Line: 293, Col: 49}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</code></div></div></div></div></div></div><!-- Add Notes Section --><div class=\"row\"><div class=\"col-12 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Notes</h5></div><div class=\"card-body\"><div class=\"mb-3\"><textarea class=\"form-control\" rows=\"3\" placeholder=\"Add your notes here...\" v-model=\"notes\"></textarea></div><button class=\"btn btn-primary\" type=\"button\" @click=\"addNotes\"><i class=\"bi bi-plus-circle\"></i> Add Notes</button></div></div></div></div></div><script>\n\t\tconst { createApp } = Vue;\n\t\t\n\t\tcreateApp({\n\t\t\tdata() {\n\t\t\t\treturn {\n\t\t\t\t\texpandedSections: {\n\t\t\t\t\t\treqHeaders: false,\n\t\t\t\t\t\tresHeaders: false,\n\t\t\t\t\t\treqBody: false,\n\t\t\t\t\t\tresBody: false\n\t\t\t\t\t},\n\t\t\t\t\tnotes: ''\n\t\t\t\t}\n\t\t\t},\n\t\t\tmethods: {\n\t\t\t\ttoggleSection(section) {\n\t\t\t\t\tthis.expandedSections[section] = !this.expandedSections[section];\n\t\t\t\t},\n\t\t\t\tgoBack() {\n\t\t\t\t\thistory.back();\n\t\t\t\t},\n\t\t\t\tcopyAsCurl() {\n\t\t\t\t\talert('Copy as cURL functionality will be implemented');\n\t\t\t\t},\n\t\t\t\topenInVSCode(section) {\n\t\t\t\t\talert('Open in VS Code functionality will be implemented for: ' + section);\n\t\t\t\t},\n\t\t\t\tcopyToClipboard(section) {\n\t\t\t\t\t// Get the content from the visible pre element\n\t\t\t\t\tconst sectionElement = document.querySelector(`[data-section=\"${section}\"]`);\n\t\t\t\t\tconst visiblePre = sectionElement.querySelector('.content-preview pre, .content-expanded pre');\n\t\t\t\t\tconst content = visiblePre ? visiblePre.textContent : '';\n\t\t\t\t\t\n\t\t\t\t\tnavigator.clipboard.writeText(content).then(() => {\n\t\t\t\t\t\tconst btn = event.target.closest('button');\n\t\t\t\t\t\tconst originalHTML = btn.innerHTML;\n\t\t\t\t\t\tbtn.innerHTML = '<i class=\"bi bi-check\"></i>';\n\t\t\t\t\t\tbtn.classList.add('btn-success');\n\t\t\t\t\t\tbtn.classList.remove('btn-outline-secondary');\n\t\t\t\t\t\tsetTimeout(() => {\n\t\t\t\t\t\t\tbtn.innerHTML = originalHTML;\n\t\t\t\t\t\t\tbtn.classList.remove('btn-success');\n\t\t\t\t\t\t\tbtn.classList.add('btn-outline-secondary');\n\t\t\t\t\t\t}, 1000);\n\t\t\t\t\t});\n\t\t\t\t},\n\t\t\t\taddNotes() {\n\t\t\t\t\talert('Add Notes functionality will be implemented. Notes: ' + this.notes);\n\t\t\t\t}\n\t\t\t}\n\t\t}).mount('#app');\n\t</script>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</code></div></div></div></div></div></div><!-- Add Notes Section --><div class=\"row\"><div class=\"col-12 mb-4\"><div class=\"card\"><div class=\"card-header\"><h5 class=\"mb-0\">Notes</h5></div><div class=\"card-body\"><div class=\"mb-3\"><textarea class=\"form-control\" rows=\"3\" placeholder=\"Add your notes here...\" x-model=\"notes\"></textarea></div><button class=\"btn btn-primary\" type=\"button\" @click=\"addNotes()\"><i class=\"bi bi-plus-circle\"></i> Add Notes</button></div></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

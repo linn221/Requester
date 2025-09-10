@@ -3,64 +3,199 @@ package templates
 import "linn221/Requester/requests"
 import "strconv"
 
+// OrderClause represents a single order clause for template
+type OrderClause struct {
+	Column    string
+	Direction string
+}
+
+// FilterState represents the current filter state
+type FilterState struct {
+	Search      string
+	ImportJobID string
+	EndpointID  string
+	Orders      []OrderClause
+}
+
 // Request listing page
-templ RequestsListPage(requests []requests.MyRequest, orderBy, direction, importJobID, endpointID, search, pageTitle string) {
-	@LayoutWithNav(pageTitle + " - App", RequestsList(requests, orderBy, direction, importJobID, endpointID, search, pageTitle), "requests")
+templ RequestsListPage(requests []requests.MyRequest, filterState FilterState, pageTitle string) {
+	@LayoutWithNav(pageTitle + " - App", RequestsList(requests, filterState, pageTitle), "requests")
 }
 
 // Request listing component
-templ RequestsList(requests []requests.MyRequest, orderBy, direction, importJobID, endpointID, search, pageTitle string) {
-	<div class="container-fluid px-0">
+templ RequestsList(requests []requests.MyRequest, filterState FilterState, pageTitle string) {
+	<div class="container-fluid" x-data="{ 
+		expandedURLs: {},
+		filters: {
+			search: '{ filterState.Search }',
+			importJobID: '{ filterState.ImportJobID }',
+			endpointID: '{ filterState.EndpointID }',
+			orders: [
+				{ column: '{ filterState.Orders[0].Column }', direction: '{ filterState.Orders[0].Direction }' },
+				{ column: '{ filterState.Orders[1].Column }', direction: '{ filterState.Orders[1].Direction }' },
+				{ column: '{ filterState.Orders[2].Column }', direction: '{ filterState.Orders[2].Direction }' },
+				{ column: '{ filterState.Orders[3].Column }', direction: '{ filterState.Orders[3].Direction }' }
+			]
+		},
+		availableColumns: [
+			{ value: '', label: 'Select Column' },
+			{ value: 'created_at', label: 'Created At' },
+			{ value: 'method', label: 'Method' },
+			{ value: 'url', label: 'URL' },
+			{ value: 'res_status', label: 'Status' },
+			{ value: 'latency_ms', label: 'Latency' },
+			{ value: 'domain', label: 'Domain' },
+			{ value: 'resp_size', label: 'Size' }
+		],
+		addOrderFilter() {
+			// Find first empty slot
+			for (let i = 0; i < this.filters.orders.length; i++) {
+				if (this.filters.orders[i].column === '') {
+					this.filters.orders[i] = { column: 'created_at', direction: 'desc' };
+					break;
+				}
+			}
+		},
+		removeOrderFilter(index) {
+			// Shift remaining filters up
+			for (let i = index; i < this.filters.orders.length - 1; i++) {
+				this.filters.orders[i] = this.filters.orders[i + 1];
+			}
+			// Clear last slot
+			this.filters.orders[this.filters.orders.length - 1] = { column: '', direction: 'desc' };
+		},
+		buildFilterURL() {
+			const params = new URLSearchParams();
+			
+			// Add search only if not empty
+			if (this.filters.search && this.filters.search.trim() !== '') {
+				params.append('search', this.filters.search);
+			}
+			
+			// Add import job ID only if not empty
+			if (this.filters.importJobID && this.filters.importJobID !== '' && this.filters.importJobID !== '0') {
+				params.append('import_job_id', this.filters.importJobID);
+			}
+			
+			// Add endpoint ID only if not empty
+			if (this.filters.endpointID && this.filters.endpointID !== '' && this.filters.endpointID !== '0') {
+				params.append('endpoint_id', this.filters.endpointID);
+			}
+			
+			// Add order parameters
+			let orderIndex = 0;
+			for (const order of this.filters.orders) {
+				if (order.column && order.column !== '') {
+					params.append(`order_${orderIndex}`, order.column);
+					params.append(`direction_${orderIndex}`, order.direction);
+					orderIndex++;
+				}
+			}
+			
+			return '/dashboard/requests?' + params.toString();
+		},
+		executeQuery() {
+			const url = this.buildFilterURL();
+			// Use HTMX to load the new results
+			htmx.ajax('GET', url, { target: '#requests-list', swap: 'outerHTML' });
+		}
+	}" id="requests-list">
 		<div class="row mb-4">
 			<div class="col-12">
 				<div class="d-flex justify-content-between align-items-center mb-3">
 					<h2>{ pageTitle }</h2>
 				</div>
-				<!-- Search bar with HTMX -->
-				<div class="input-group mb-3">
-					<input type="hidden" name="import_job_id" value={ importJobID }>
-					<input type="hidden" name="endpoint_id" value={ endpointID }>
-					<input 
-						type="text" 
-						class="form-control" 
-						placeholder="Search requests..." 
-						aria-label="Search requests"
-						name="search"
-						value={ search }
-						hx-get="/dashboard/requests"
-						hx-trigger="keyup changed delay:500ms"
-						hx-target="#requests-content"
-						hx-include="[name='search'], [name='import_job_id'], [name='endpoint_id'], [id='orderBy'], [id='direction']"
-					>
-					<button class="btn btn-outline-secondary" type="button">
-						<i class="bi bi-search"></i>
-					</button>
-				</div>
 				
-				<!-- Ordering controls -->
-				<div class="row mb-3">
-					<div class="col-md-6">
-						<div class="d-flex align-items-center gap-2">
-							<label for="orderBy" class="form-label mb-0">Sort by:</label>
-							<select class="form-select form-select-sm" id="orderBy" hx-get="/dashboard/requests" hx-trigger="change" hx-target="#requests-content" hx-include="[name='search'], [name='import_job_id'], [name='endpoint_id'], [id='orderBy'], [id='direction']">
-								<option value="sequence_number" selected={ orderBy == "sequence_number" }>Sequence</option>
-								<option value="method" selected={ orderBy == "method" }>Method</option>
-								<option value="status" selected={ orderBy == "status" }>Status</option>
-								<option value="url" selected={ orderBy == "url" }>URL</option>
-								<option value="domain" selected={ orderBy == "domain" }>Domain</option>
-								<option value="size" selected={ orderBy == "size" }>Size</option>
-								<option value="type" selected={ orderBy == "type" }>Type</option>
-								<option value="latency" selected={ orderBy == "latency" }>Latency</option>
-							</select>
-						</div>
+				<!-- Dynamic Filter Section -->
+				<div class="card mb-4">
+					<div class="card-header">
+						<h5 class="card-title mb-0">
+							<i class="bi bi-funnel"></i> Filters & Sorting
+						</h5>
 					</div>
-					<div class="col-md-6">
-						<div class="d-flex align-items-center gap-2">
-							<label for="direction" class="form-label mb-0">Direction:</label>
-							<select class="form-select form-select-sm" id="direction" hx-get="/dashboard/requests" hx-trigger="change" hx-target="#requests-content" hx-include="[name='search'], [name='import_job_id'], [name='endpoint_id'], [id='orderBy'], [id='direction']">
-								<option value="ASC" selected={ direction == "ASC" }>Ascending</option>
-								<option value="DESC" selected={ direction == "DESC" }>Descending</option>
-							</select>
+					<div class="card-body">
+						<!-- Search Bar -->
+						<div class="row mb-3">
+							<div class="col-12">
+								<label class="form-label fw-bold">Search</label>
+								<div class="input-group">
+									<input 
+										type="text" 
+										class="form-control" 
+										placeholder="Search requests..." 
+										aria-label="Search requests"
+										x-model="filters.search"
+										value={ filterState.Search }
+									>
+									<button class="btn btn-outline-secondary" type="button" @click="executeQuery()">
+										<i class="bi bi-search"></i>
+									</button>
+								</div>
+							</div>
+						</div>
+
+						<!-- Order Filters -->
+						<div class="row mb-3">
+							<div class="col-12">
+								<div class="d-flex justify-content-between align-items-center mb-2">
+									<label class="form-label fw-bold mb-0">Order By</label>
+									<button type="button" class="btn btn-sm btn-outline-primary" @click="addOrderFilter()" x-show="filters.orders.some(order => order.column === '')">
+										<i class="bi bi-plus"></i> Add Order
+									</button>
+								</div>
+								
+								<template x-for="(order, index) in filters.orders" :key="index">
+									<div class="row mb-2" x-show="order.column !== '' || index === 0">
+										<div class="col-md-5">
+											<select class="form-select" x-model="order.column">
+												<template x-for="col in availableColumns" :key="col.value">
+													<option :value="col.value" x-text="col.label"></option>
+												</template>
+											</select>
+										</div>
+										<div class="col-md-3">
+											<select class="form-select" x-model="order.direction">
+												<option value="asc">Ascending</option>
+												<option value="desc">Descending</option>
+											</select>
+										</div>
+										<div class="col-md-2">
+											<button type="button" class="btn btn-outline-danger btn-sm" @click="removeOrderFilter(index)" x-show="index > 0">
+												<i class="bi bi-trash"></i> Remove
+											</button>
+										</div>
+									</div>
+								</template>
+							</div>
+						</div>
+
+						<!-- Future Filters Placeholder -->
+						<div class="row mb-3">
+							<div class="col-12">
+								<label class="form-label fw-bold text-muted">Additional Filters (Coming Soon)</label>
+								<div class="alert alert-info mb-0">
+									<i class="bi bi-info-circle"></i> 
+									Future filters will include: Status, Method, Type, Size, and more.
+								</div>
+							</div>
+						</div>
+
+						<!-- URL Display and Query Button -->
+						<div class="row">
+							<div class="col-12">
+								<label class="form-label fw-bold">Generated Query URL</label>
+								<div class="input-group mb-2">
+									<input type="text" class="form-control font-monospace" :value="buildFilterURL()" readonly>
+									<button class="btn btn-outline-secondary" type="button" @click="navigator.clipboard.writeText(buildFilterURL())">
+										<i class="bi bi-clipboard"></i>
+									</button>
+								</div>
+								<div class="d-flex justify-content-end">
+									<button type="button" class="btn btn-primary" @click="executeQuery()">
+										<i class="bi bi-play-circle"></i> Execute Query
+									</button>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -83,86 +218,108 @@ templ RequestsList(requests []requests.MyRequest, orderBy, direction, importJobI
 				</div>
 			</div>
 		} else {
-			<div id="requests-content">
-				<div class="row">
-					for _, request := range requests {
+			<div class="row">
+				for _, request := range requests {
 					<div class="col-12 mb-3">
-						<div class="card">
+						<div class="card h-100">
 							<div class="card-body">
-								<div class="row">
-									<div class="col-md-8">
-										<div class="d-flex align-items-center gap-2 mb-3">
-											<span class="badge bg-secondary">#{ strconv.Itoa(request.Sequence) }</span>
+								<!-- Header row with sequence, method, status, and action -->
+								<div class="row align-items-center mb-3">
+									<div class="col-auto">
+										<span class="badge bg-secondary fs-6">#{ strconv.Itoa(request.Sequence) }</span>
+									</div>
+									<div class="col-auto">
+										<span class={ getMethodBadgeClass(request.Method) }>{ request.Method }</span>
+									</div>
+									<div class="col-auto">
+										<span class={ getStatusBadgeClass(request.ResStatus) }>{ request.ResStatus }</span>
+									</div>
+									<div class="col-auto ms-auto">
+										<a href={ "/dashboard/requests/detail/" + strconv.FormatUint(uint64(request.ID), 10) } class="btn btn-outline-primary btn-sm">
+											<i class="bi bi-eye"></i> View Details
+										</a>
+									</div>
+								</div>
+
+								<!-- URL (full width) - clickable hyperlink -->
+								<div class="mb-3">
+									<label class="form-label fw-bold text-muted small">URL</label>
+									<div class="url-text">
+										<a href={ request.URL } target="_blank" rel="noopener noreferrer" class="text-decoration-none">
+											<span 
+												x-text="expandedURLs['url-{ strconv.FormatUint(uint64(request.ID), 10) }'] ? $el.getAttribute('data-full-url') : $el.getAttribute('data-truncated-url')"
+												data-full-url={ request.URL }
+												data-truncated-url={ truncateURL(request.URL, 100) }
+												class="text-break"
+											></span>
+										</a>
+										if len(request.URL) > 100 {
+											<button 
+												type="button" 
+												class="btn btn-link btn-sm p-0 ms-1 fw-bold"
+												@click="expandedURLs['url-{ strconv.FormatUint(uint64(request.ID), 10) }'] = !expandedURLs['url-{ strconv.FormatUint(uint64(request.ID), 10) }']"
+												x-text="expandedURLs['url-{ strconv.FormatUint(uint64(request.ID), 10) }'] ? 'less' : 'more'"
+											></button>
+										}
+									</div>
+								</div>
+
+								<!-- Endpoint (full width) - fixed length display -->
+								<div class="mb-3">
+									<label class="form-label fw-bold text-muted small">Endpoint</label>
+									<div>
+										<a href={ "/dashboard/endpoints/" + strconv.FormatUint(uint64(request.EndpointID), 10) } class="text-decoration-none">
 											<span class={ getMethodBadgeClass(request.Method) }>{ request.Method }</span>
-											<span class={ getStatusBadgeClass(request.ResStatus) }>{ request.ResStatus }</span>
-										</div>
-										
-										<div class="mb-3">
-											<strong>URL:</strong>
-											<div class="url-text mt-1">
-												<a href={ request.URL } target="_blank" rel="noopener noreferrer" class="text-decoration-none">
-													{ truncateURL(request.URL, 80) }
-												</a>
-												if len(request.URL) > 80 {
-													<button 
-														type="button" 
-														class="btn btn-link btn-sm p-0 ms-1 fw-bold"
-														onclick="this.previousElementSibling.textContent = this.getAttribute('data-full-url'); this.textContent = 'less'; this.onclick = function() { this.previousElementSibling.textContent = this.getAttribute('data-truncated'); this.textContent = 'more'; this.onclick = arguments.callee; }"
-														data-full-url={ request.URL }
-														data-truncated={ truncateURL(request.URL, 80) }
-													>
-														more
-													</button>
-												}
-											</div>
-										</div>
-										
-										<div class="row g-3">
-											<div class="col-sm-6 col-md-3">
-												<small class="text-muted d-block">Domain</small>
-												<div class="fw-medium">{ request.Domain }</div>
-											</div>
-											<div class="col-sm-6 col-md-3">
-												<small class="text-muted d-block">Size</small>
-												<div class="fw-medium">{ formatBytes(request.RespSize) }</div>
-											</div>
-											<div class="col-sm-6 col-md-3">
-												<small class="text-muted d-block">Type</small>
-												<div class="fw-medium small">{ getContentType(request.ResHeaders) }</div>
-											</div>
-											<div class="col-sm-6 col-md-3">
-												<small class="text-muted d-block">Latency</small>
-												<div class="fw-medium">{ request.LatencyMs }ms</div>
-											</div>
+											<span class="ms-2 text-break">{ truncateURL(request.Domain + ExtractURIWithoutQuery(request.URL), 80) }</span>
+										</a>
+									</div>
+								</div>
+
+								<!-- Details row -->
+								<div class="row">
+									<div class="col-md-3">
+										<label class="form-label fw-bold text-muted small">Domain</label>
+										<div class="text-break">{ request.Domain }</div>
+									</div>
+									<div class="col-md-3">
+										<label class="form-label fw-bold text-muted small">Size / Type</label>
+										<div>
+											<div>{ formatBytes(request.RespSize) }</div>
+											<div class="small text-muted">{ getContentType(request.ResHeaders) }</div>
 										</div>
 									</div>
-									
-									<div class="col-md-4">
-										<div class="d-flex justify-content-end mb-3">
-											<a href={ "/dashboard/requests/detail/" + strconv.FormatUint(uint64(request.ID), 10) } class="btn btn-outline-primary">
-												<i class="bi bi-eye"></i> View Details
-											</a>
-										</div>
-										
-										<div>
-											<small class="text-muted d-block mb-2">Hashes</small>
+									<div class="col-md-3">
+										<label class="form-label fw-bold text-muted small">Latency</label>
+										<div>{ request.LatencyMs }ms</div>
+									</div>
+								</div>
+
+								<!-- Hashes section (full width) -->
+								<div class="mt-3">
+									<label class="form-label fw-bold text-muted small">Hashes</label>
+									<div class="row">
+										<div class="col-md-3">
 											<div class="small">
-												<div class="mb-1">
-													<span class="text-muted">Req:</span> 
-													<code class="small">{ request.ReqHash }</code>
-												</div>
-												<div class="mb-1">
-													<span class="text-muted">Res:</span> 
-													<code class="small">{ request.ResHash }</code>
-												</div>
-												<div class="mb-1">
-													<span class="text-muted">Req1:</span> 
-													<code class="small">{ request.ReqHash1 }</code>
-												</div>
-												<div>
-													<span class="text-muted">Body:</span> 
-													<code class="small">{ request.ResBodyHash }</code>
-												</div>
+												<span class="text-muted">Req:</span>
+												<code class="small ms-1">{ request.ReqHash }</code>
+											</div>
+										</div>
+										<div class="col-md-3">
+											<div class="small">
+												<span class="text-muted">Res:</span>
+												<code class="small ms-1">{ request.ResHash }</code>
+											</div>
+										</div>
+										<div class="col-md-3">
+											<div class="small">
+												<span class="text-muted">Req1:</span>
+												<code class="small ms-1">{ request.ReqHash1 }</code>
+											</div>
+										</div>
+										<div class="col-md-3">
+											<div class="small">
+												<span class="text-muted">Body:</span>
+												<code class="small ms-1">{ request.ResBodyHash }</code>
 											</div>
 										</div>
 									</div>
@@ -170,52 +327,8 @@ templ RequestsList(requests []requests.MyRequest, orderBy, direction, importJobI
 							</div>
 						</div>
 					</div>
-					}
-				</div>
+				}
 			</div>
 		}
 	</div>
-	
-}
-
-// Helper function to build search URL
-func buildSearchURL(importJobID, endpointID, orderBy, direction string) string {
-	baseURL := "/dashboard/requests?"
-	
-	if endpointID != "" {
-		baseURL += "endpoint_id=" + endpointID
-	} else if importJobID != "" {
-		baseURL += "import_job_id=" + importJobID
-	}
-	
-	if orderBy != "" {
-		baseURL += "&order_by=" + orderBy
-	}
-	
-	if direction != "" {
-		asc := "true"
-		if direction == "DESC" {
-			asc = "false"
-		}
-		baseURL += "&asc=" + asc
-	}
-	
-	return baseURL
-}
-
-
-// Helper function to truncate URL
-func truncateURL(url string, maxLength int) string {
-	if len(url) <= maxLength {
-		return url
-	}
-	return url[:maxLength] + "..."
-}
-
-// Helper function to truncate hash for display
-func truncateHash(hash string) string {
-	if len(hash) <= 12 {
-		return hash
-	}
-	return hash[:12] + "..."
 }

@@ -142,3 +142,103 @@ func (s *RequestService) buildOrderClause(orderBy, direction string) string {
 		return "sequence ASC"
 	}
 }
+
+// GetRequestsByImportJobWithMultiOrderAndSearch fetches requests for a specific import job with multiple ordering and search
+func (s *RequestService) GetRequestsByImportJobWithMultiOrderAndSearch(ctx context.Context, importJobID uint, orders []OrderClause, search string) ([]requests.MyRequest, error) {
+	var reqs []requests.MyRequest
+
+	// Build the order clause
+	orderClause := s.buildMultiOrderClause(orders)
+
+	query := s.db.WithContext(ctx).Where("import_job_id = ?", importJobID)
+
+	// Add search condition if search term is provided
+	if search != "" {
+		query = query.Where("url LIKE ? OR method LIKE ? OR domain LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Order(orderClause).Find(&reqs).Error(); err != nil {
+		return nil, fmt.Errorf("failed to fetch requests for job %d: %v", importJobID, err)
+	}
+	return reqs, nil
+}
+
+// GetRequestsByEndpointWithMultiOrderAndSearch fetches requests for a specific endpoint with multiple ordering and search
+func (s *RequestService) GetRequestsByEndpointWithMultiOrderAndSearch(ctx context.Context, endpointID uint, orders []OrderClause, search string) ([]requests.MyRequest, error) {
+	var reqs []requests.MyRequest
+
+	// Build the order clause
+	orderClause := s.buildMultiOrderClause(orders)
+
+	query := s.db.WithContext(ctx).Where("endpoint_id = ?", endpointID)
+
+	// Add search condition if search term is provided
+	if search != "" {
+		query = query.Where("url LIKE ? OR method LIKE ? OR domain LIKE ?", "%"+search+"%", "%"+search+"%", "%"+search+"%")
+	}
+
+	if err := query.Order(orderClause).Find(&reqs).Error(); err != nil {
+		return nil, fmt.Errorf("failed to fetch requests for endpoint %d: %v", endpointID, err)
+	}
+	return reqs, nil
+}
+
+// OrderClause represents a single order clause
+type OrderClause struct {
+	Column    string
+	Direction string
+}
+
+// buildMultiOrderClause builds the ORDER BY clause based on multiple order clauses
+func (s *RequestService) buildMultiOrderClause(orders []OrderClause) string {
+	if len(orders) == 0 {
+		return "sequence ASC"
+	}
+
+	var clauses []string
+	for _, order := range orders {
+		if order.Column == "" {
+			continue
+		}
+
+		// Validate and normalize direction
+		direction := strings.ToUpper(order.Direction)
+		if direction != "ASC" && direction != "DESC" {
+			direction = "ASC"
+		}
+
+		// Map column names to database fields
+		column := s.mapColumnToField(order.Column)
+		if column != "" {
+			clauses = append(clauses, fmt.Sprintf("%s %s", column, direction))
+		}
+	}
+
+	if len(clauses) == 0 {
+		return "sequence ASC"
+	}
+
+	return strings.Join(clauses, ", ")
+}
+
+// mapColumnToField maps frontend column names to database field names
+func (s *RequestService) mapColumnToField(column string) string {
+	switch column {
+	case "created_at":
+		return "created_at"
+	case "method":
+		return "method"
+	case "url":
+		return "url"
+	case "res_status":
+		return "res_status"
+	case "latency_ms":
+		return "latency_ms"
+	case "domain":
+		return "domain"
+	case "resp_size":
+		return "resp_size"
+	default:
+		return ""
+	}
+}
