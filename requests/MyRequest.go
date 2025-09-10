@@ -17,9 +17,27 @@ const (
 	EndpointTypeGraphQL EndpointType = "GraphQL"
 )
 
+// Program represents a program/project
+type Program struct {
+	ID        uint   `gorm:"primaryKey"`
+	Name      string `gorm:"size:255;not null"`
+	URL       string `gorm:"size:500"`
+	Notes     string `gorm:"type:text"`
+	Scope     string `gorm:"type:text"`
+	Domains   string `gorm:"type:text"` // Store as JSON string
+	CreatedAt int64  `gorm:"autoCreateTime"`
+	UpdatedAt int64  `gorm:"autoUpdateTime"`
+
+	// One-to-many relationships (temporarily disabled for migration)
+	// ImportJobs []ImportJob `gorm:"foreignKey:ProgramID"`
+	// Endpoints  []Endpoint  `gorm:"foreignKey:ProgramID"`
+	// Requests   []MyRequest `gorm:"foreignKey:ProgramID"`
+}
+
 // Endpoint represents an API endpoint
 type Endpoint struct {
 	ID           uint         `gorm:"primaryKey"`
+	ProgramID    *uint        `gorm:"index"` // Foreign key to Program (nullable for migration)
 	Method       string       `gorm:"size:10;not null"`
 	Domain       string       `gorm:"size:255;not null"`
 	URI          string       `gorm:"type:text;not null"`
@@ -34,6 +52,7 @@ type Endpoint struct {
 
 type ImportJob struct {
 	ID             uint   `gorm:"primaryKey"`
+	ProgramID      *uint  `gorm:"index"` // Foreign key to Program (nullable for migration)
 	Title          string `gorm:"not null"`
 	IgnoredHeaders string `gorm:"type:text"` // Store as JSON string
 	CreatedAt      int64  `gorm:"autoCreateTime"`
@@ -45,6 +64,7 @@ type ImportJob struct {
 
 type MyRequest struct {
 	ID          uint   `gorm:"primaryKey"`
+	ProgramID   *uint  `gorm:"index"`          // Foreign key to Program (nullable for migration)
 	ImportJobID uint   `gorm:"not null;index"` // Foreign key to ImportJob
 	EndpointID  uint   `gorm:"not null;index"` // Foreign key to Endpoint
 	Sequence    int    `gorm:"not null"`
@@ -164,7 +184,7 @@ func (r TempMyRequest) requestText() string {
 }
 
 // Convert TempMyRequest to MyRequest for database storage
-func (temp *TempMyRequest) ToMyRequest(importJobID, endpointID uint) (*MyRequest, error) {
+func (temp *TempMyRequest) ToMyRequest(programID, importJobID, endpointID uint) (*MyRequest, error) {
 	// Convert HeaderSlice to JSON strings
 	reqHeadersJSON, err := temp.ReqHeaders.ToJSON()
 	if err != nil {
@@ -177,6 +197,7 @@ func (temp *TempMyRequest) ToMyRequest(importJobID, endpointID uint) (*MyRequest
 	}
 
 	return &MyRequest{
+		ProgramID:   &programID,
 		ImportJobID: importJobID,
 		EndpointID:  endpointID,
 		Sequence:    temp.Sequence,

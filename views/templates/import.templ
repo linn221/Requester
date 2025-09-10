@@ -1,14 +1,15 @@
 package templates
 
+import "linn221/Requester/requests"
 import "strconv"
 
 // Import form page
-templ ImportFormPage() {
-	@LayoutWithNav("Import HAR - App", ImportForm(), "import")
+templ ImportFormPage(programs []requests.Program) {
+	@LayoutWithNav("Import HAR - App", ImportForm(programs), "import")
 }
 
 // Import form component
-templ ImportForm() {
+templ ImportForm(programs []requests.Program) {
 	<div class="container-fluid">
 		<div class="row justify-content-center">
 			<div class="col-md-8 col-lg-6">
@@ -18,6 +19,16 @@ templ ImportForm() {
 					</div>
 					<div class="card-body">
 						<form hx-post="/dashboard/import" hx-target="#main" hx-swap="innerHTML" enctype="multipart/form-data">
+							<div class="mb-3">
+								<label for="program_id" class="form-label">Program <span class="text-danger">*</span></label>
+								<select class="form-select" id="program_id" name="program_id" required>
+									<option value="">Select a program...</option>
+									for _, program := range programs {
+										<option value={ strconv.FormatUint(uint64(program.ID), 10) }>{ program.Name }</option>
+									}
+								</select>
+								<div class="form-text">Select the program this import belongs to</div>
+							</div>
 							<div class="mb-3">
 								<label for="title" class="form-label">Import Title</label>
 								<input type="text" class="form-control" id="title" name="title" required placeholder="Enter a title for this import">

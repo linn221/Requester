@@ -52,6 +52,7 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 	importJobsHandler := handlers.NewImportJobsHandler(app.services)
 	requestsHandler := handlers.NewRequestsHandler(app.services)
 	endpointsHandler := handlers.NewEndpointsHandler(app.services)
+	programsHandler := handlers.NewProgramsHandler(app.services)
 
 	// Home page - check if it's an HTMX request
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
@@ -66,17 +67,43 @@ func makeDashboardRoutes(app *App, mux *http.ServeMux) {
 
 	// Import form - check if it's an HTMX request
 	mux.HandleFunc("GET /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		// Fetch all programs for the dropdown
+		programs, err := app.services.ProgramService.GetAllPrograms(r.Context())
+		if err != nil {
+			return err
+		}
+
 		if r.Header.Get("HX-Request") == "true" {
 			// HTMX request - return just the form
-			return templates.ImportForm().Render(r.Context(), w)
+			return templates.ImportForm(programs).Render(r.Context(), w)
 		} else {
 			// Direct visit - return full page with layout
-			return templates.ImportFormPage().Render(r.Context(), w)
+			return templates.ImportFormPage(programs).Render(r.Context(), w)
 		}
 	}))
 
 	mux.HandleFunc("POST /import", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
 		return handleImport(app, w, r)
+	}))
+
+	// Programs CRUD routes
+	mux.HandleFunc("GET /programs", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return programsHandler.HandleProgramsList(w, r)
+	}))
+	mux.HandleFunc("GET /programs/create", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return programsHandler.HandleProgramCreate(w, r)
+	}))
+	mux.HandleFunc("POST /programs", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return programsHandler.HandleProgramStore(w, r)
+	}))
+	mux.HandleFunc("GET /programs/{id}/edit", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return programsHandler.HandleProgramEdit(w, r)
+	}))
+	mux.HandleFunc("PUT /programs/{id}", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return programsHandler.HandleProgramUpdate(w, r)
+	}))
+	mux.HandleFunc("DELETE /programs/{id}", app.HandleMin(func(w http.ResponseWriter, r *http.Request) error {
+		return programsHandler.HandleProgramDelete(w, r)
 	}))
 
 	// Import jobs list - check if it's an HTMX request

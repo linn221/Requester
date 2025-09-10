@@ -10,6 +10,7 @@ type ServiceContainer struct {
 	RequestService   *RequestService
 	ImportJobService *ImportJobService
 	EndpointService  *EndpointService
+	ProgramService   *ProgramService
 	FormParser       *FormParser
 }
 
@@ -17,12 +18,14 @@ type ServiceContainer struct {
 func NewServiceContainer(db *gorm.DB) *ServiceContainer {
 	database := NewGormDatabaseAdapter(db)
 	endpointService := NewEndpointService(database)
+	programService := NewProgramService(database)
 
 	return &ServiceContainer{
 		ImportService:    NewImportService(database, endpointService),
 		RequestService:   NewRequestService(database),
 		ImportJobService: NewImportJobService(database),
 		EndpointService:  endpointService,
+		ProgramService:   programService,
 		FormParser:       NewFormParser(),
 	}
 }

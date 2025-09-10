@@ -23,6 +23,8 @@ type Transaction interface {
 type Tx interface {
 	Create(value interface{}) Query
 	CreateInBatches(value interface{}, batchSize int) Query
+	Model(value interface{}) Query
+	Delete(value interface{}, conds ...interface{}) Query
 	Commit() Query
 	Rollback()
 	Error() error
@@ -41,6 +43,8 @@ type Query interface {
 	Scan(dest interface{}) Query
 	Group(query string) Query
 	Where(query interface{}, args ...interface{}) Query
+	Updates(values interface{}) Query
+	Delete(value interface{}, conds ...interface{}) Query
 }
 
 // HTTPRequest interface for HTTP request operations
@@ -63,6 +67,7 @@ type FileHeader interface {
 
 // ImportRequest represents the data needed for import
 type ImportRequest struct {
+	ProgramID      uint
 	Title          string
 	IgnoredHeaders []string
 	FileContent    []byte

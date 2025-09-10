@@ -17,10 +17,10 @@ func NewEndpointService(db Database) *EndpointService {
 }
 
 // FindOrCreateEndpoint finds an existing endpoint or creates a new one
-func (s *EndpointService) FindOrCreateEndpoint(ctx context.Context, method, domain, uri string) (*requests.Endpoint, error) {
+func (s *EndpointService) FindOrCreateEndpoint(ctx context.Context, programID uint, method, domain, uri string) (*requests.Endpoint, error) {
 	// First, try to find existing endpoint
 	var endpoint requests.Endpoint
-	err := s.db.WithContext(ctx).Where("method = ? AND domain = ? AND uri = ?", method, domain, uri).First(&endpoint).Error()
+	err := s.db.WithContext(ctx).Where("program_id = ? AND method = ? AND domain = ? AND uri = ?", programID, method, domain, uri).First(&endpoint).Error()
 
 	if err == nil {
 		// Endpoint found, return it
@@ -30,6 +30,7 @@ func (s *EndpointService) FindOrCreateEndpoint(ctx context.Context, method, doma
 	// Endpoint not found, create new one
 	endpointType := requests.DetermineEndpointType(uri, method)
 	newEndpoint := &requests.Endpoint{
+		ProgramID:    &programID,
 		Method:       method,
 		Domain:       domain,
 		URI:          uri,

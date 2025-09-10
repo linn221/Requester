@@ -3,6 +3,7 @@ package services
 import (
 	"fmt"
 	"io"
+	"strconv"
 	"strings"
 )
 
@@ -23,6 +24,15 @@ func (p *FormParser) ParseImportForm(r HTTPRequest) (*ImportRequest, error) {
 	}
 
 	// Get form values
+	programIDStr := r.FormValue("program_id")
+	if programIDStr == "" {
+		return nil, fmt.Errorf("program_id is required")
+	}
+	programID, err := strconv.ParseUint(programIDStr, 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("invalid program_id: %v", err)
+	}
+
 	title := r.FormValue("title")
 	if title == "" {
 		return nil, fmt.Errorf("title is required")
@@ -45,6 +55,7 @@ func (p *FormParser) ParseImportForm(r HTTPRequest) (*ImportRequest, error) {
 	}
 
 	return &ImportRequest{
+		ProgramID:      uint(programID),
 		Title:          title,
 		IgnoredHeaders: ignoredHeaders,
 		FileContent:    fileContent,

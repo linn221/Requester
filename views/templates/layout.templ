@@ -124,6 +124,7 @@ templ LayoutWithNav(title string, content templ.Component, currentPage string) {
 					<div class="collapse navbar-collapse" id="navbarNav">
 						<div class="navbar-nav">
 							<a class="nav-link" href="/dashboard/" class={ getNavLinkClass(currentPage, "home") }>Home</a>
+							<a class="nav-link" href="/dashboard/programs" class={ getNavLinkClass(currentPage, "programs") }>Programs</a>
 							<a class="nav-link" href="/dashboard/import" class={ getNavLinkClass(currentPage, "import") }>Import File</a>
 							<a class="nav-link" href="/dashboard/import-jobs" class={ getNavLinkClass(currentPage, "jobs") }>Jobs</a>
 							<a class="nav-link" href="/dashboard/endpoints" class={ getNavLinkClass(currentPage, "endpoints") }>Endpoints</a>

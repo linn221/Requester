@@ -1,0 +1,224 @@
+package templates
+
+import "linn221/Requester/requests"
+import "strconv"
+
+// Programs list page
+templ ProgramsListPage(programs []requests.Program) {
+	@LayoutWithNav("Programs - App", ProgramsList(programs), "programs")
+}
+
+// Programs list component
+templ ProgramsList(programs []requests.Program) {
+	<div class="container-fluid">
+		<div class="row mb-4">
+			<div class="col-12">
+				<div class="d-flex justify-content-between align-items-center">
+					<h2>Programs</h2>
+					<div class="d-flex gap-2">
+						<a href="/dashboard/programs/create" class="btn btn-primary" hx-get="/dashboard/programs/create" hx-target="#main" hx-swap="innerHTML">
+							<i class="bi bi-plus-circle"></i> New Program
+						</a>
+						<!-- Search bar (UI only) -->
+						<div class="input-group" style="width: 300px;">
+							<input type="text" class="form-control" placeholder="Search programs..." aria-label="Search programs">
+							<button class="btn btn-outline-secondary" type="button">
+								<i class="bi bi-search"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		if len(programs) == 0 {
+			<div class="row">
+				<div class="col-12">
+					<div class="card">
+						<div class="card-body text-center py-5">
+							<i class="bi bi-folder display-1 text-muted"></i>
+							<h4 class="mt-3 text-muted">No Programs Found</h4>
+							<p class="text-muted">Create your first program to organize your import jobs and requests.</p>
+							<a href="/dashboard/programs/create" class="btn btn-primary" hx-get="/dashboard/programs/create" hx-target="#main" hx-swap="innerHTML">
+								<i class="bi bi-plus-circle"></i> Create Program
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		} else {
+			<div class="table-responsive">
+				<table class="table table-hover">
+					<thead class="table-light">
+						<tr>
+							<th>ID</th>
+							<th>Name</th>
+							<th>URL</th>
+							<th>Scope</th>
+							<th>Domains</th>
+							<th>Created</th>
+							<th>Updated</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						for _, program := range programs {
+							<tr>
+								<td>{ strconv.FormatUint(uint64(program.ID), 10) }</td>
+								<td>
+									<strong>{ program.Name }</strong>
+									if program.Notes != "" {
+										<br>
+										<small class="text-muted">{ program.Notes }</small>
+									}
+								</td>
+								<td>
+									if program.URL != "" {
+										<a href={ program.URL } target="_blank" class="text-decoration-none">
+											{ program.URL }
+											<i class="bi bi-box-arrow-up-right ms-1"></i>
+										</a>
+									} else {
+										<span class="text-muted">-</span>
+									}
+								</td>
+								<td>
+									if program.Scope != "" {
+										<span class="text-muted">{ program.Scope }</span>
+									} else {
+										<span class="text-muted">-</span>
+									}
+								</td>
+								<td>
+									if program.Domains != "" {
+										<span class="text-muted">{ program.Domains }</span>
+									} else {
+										<span class="text-muted">-</span>
+									}
+								</td>
+								<td>{ formatDate(program.CreatedAt) }</td>
+								<td>{ formatDate(program.UpdatedAt) }</td>
+								<td>
+									<div class="btn-group" role="group">
+										<a href={ "/dashboard/programs/" + strconv.FormatUint(uint64(program.ID), 10) + "/edit" } class="btn btn-outline-primary btn-sm" hx-get={ "/dashboard/programs/" + strconv.FormatUint(uint64(program.ID), 10) + "/edit" } hx-target="#main" hx-swap="innerHTML">
+											<i class="bi bi-pencil"></i> Edit
+										</a>
+										<button type="button" class="btn btn-outline-danger btn-sm" data-program-id={ strconv.FormatUint(uint64(program.ID), 10) } onclick="deleteProgram(this.dataset.programId)">
+											<i class="bi bi-trash"></i> Delete
+										</button>
+									</div>
+								</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+	</div>
+
+	<script>
+		function deleteProgram(id) {
+			if (confirm('Are you sure you want to delete this program? This action cannot be undone.')) {
+				fetch('/dashboard/programs/' + id, {
+					method: 'DELETE',
+					headers: {
+						'HX-Request': 'true'
+					}
+				}).then(() => {
+					// Reload the programs list
+					htmx.trigger('#main', 'htmx:afterRequest');
+					location.reload();
+				});
+			}
+		}
+	</script>
+}
+
+// Program form page
+templ ProgramFormPage(program *requests.Program) {
+	@LayoutWithNav("Program Form - App", ProgramForm(program), "programs")
+}
+
+// Program form component
+templ ProgramForm(program *requests.Program) {
+	<div class="container-fluid">
+		<div class="row justify-content-center">
+			<div class="col-md-8 col-lg-6">
+				<div class="card">
+					<div class="card-header">
+						<h4 class="mb-0">
+							if program != nil {
+								Edit Program
+							} else {
+								Create New Program
+							}
+						</h4>
+					</div>
+					<div class="card-body">
+						if program != nil {
+							<form hx-put={ "/dashboard/programs/" + strconv.FormatUint(uint64(program.ID), 10) } hx-target="#main" hx-swap="innerHTML">
+								<div class="mb-3">
+									<label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" id="name" name="name" required placeholder="Enter program name" value={ program.Name }>
+								</div>
+								<div class="mb-3">
+									<label for="url" class="form-label">URL</label>
+									<input type="url" class="form-control" id="url" name="url" placeholder="Enter program URL" value={ program.URL }>
+								</div>
+								<div class="mb-3">
+									<label for="scope" class="form-label">Scope</label>
+									<textarea class="form-control" id="scope" name="scope" rows="3" placeholder="Enter program scope or description">{ program.Scope }</textarea>
+								</div>
+								<div class="mb-3">
+									<label for="domains" class="form-label">Domains</label>
+									<textarea class="form-control" id="domains" name="domains" rows="3" placeholder="Enter domains (one per line or comma-separated)">{ program.Domains }</textarea>
+									<div class="form-text">List of domains associated with this program</div>
+								</div>
+								<div class="mb-3">
+									<label for="notes" class="form-label">Notes</label>
+									<textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Enter additional notes">{ program.Notes }</textarea>
+								</div>
+								<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+									<a href="/dashboard/programs" class="btn btn-secondary" hx-get="/dashboard/programs" hx-target="#main" hx-swap="innerHTML">Cancel</a>
+									<button type="submit" class="btn btn-primary">
+										<i class="bi bi-check-circle"></i> Update Program
+									</button>
+								</div>
+							</form>
+						} else {
+							<form hx-post="/dashboard/programs" hx-target="#main" hx-swap="innerHTML">
+								<div class="mb-3">
+									<label for="name" class="form-label">Name <span class="text-danger">*</span></label>
+									<input type="text" class="form-control" id="name" name="name" required placeholder="Enter program name">
+								</div>
+								<div class="mb-3">
+									<label for="url" class="form-label">URL</label>
+									<input type="url" class="form-control" id="url" name="url" placeholder="Enter program URL">
+								</div>
+								<div class="mb-3">
+									<label for="scope" class="form-label">Scope</label>
+									<textarea class="form-control" id="scope" name="scope" rows="3" placeholder="Enter program scope or description"></textarea>
+								</div>
+								<div class="mb-3">
+									<label for="domains" class="form-label">Domains</label>
+									<textarea class="form-control" id="domains" name="domains" rows="3" placeholder="Enter domains (one per line or comma-separated)"></textarea>
+									<div class="form-text">List of domains associated with this program</div>
+								</div>
+								<div class="mb-3">
+									<label for="notes" class="form-label">Notes</label>
+									<textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Enter additional notes"></textarea>
+								</div>
+								<div class="d-grid gap-2 d-md-flex justify-content-md-end">
+									<a href="/dashboard/programs" class="btn btn-secondary" hx-get="/dashboard/programs" hx-target="#main" hx-swap="innerHTML">Cancel</a>
+									<button type="submit" class="btn btn-primary">
+										<i class="bi bi-plus-circle"></i> Create Program
+									</button>
+								</div>
+							</form>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}

@@ -42,6 +42,7 @@ func (s *ImportService) ImportHAR(ctx context.Context, req ImportRequest) (*Impo
 
 	// Create ImportJob record
 	importJob := requests.ImportJob{
+		ProgramID:      &req.ProgramID,
 		Title:          req.Title,
 		IgnoredHeaders: strings.Join(req.IgnoredHeaders, ","),
 	}
@@ -76,12 +77,12 @@ func (s *ImportService) ImportHAR(ctx context.Context, req ImportRequest) (*Impo
 		uri := requests.ExtractURIWithoutQuery(tempReq.URL)
 
 		// Find or create endpoint
-		endpoint, err := s.endpointService.FindOrCreateEndpoint(ctx, tempReq.Method, tempReq.Domain, uri)
+		endpoint, err := s.endpointService.FindOrCreateEndpoint(ctx, req.ProgramID, tempReq.Method, tempReq.Domain, uri)
 		if err != nil {
 			return nil, fmt.Errorf("failed to find or create endpoint: %v", err)
 		}
 
-		dbReq, err := tempReq.ToMyRequest(importJob.ID, endpoint.ID)
+		dbReq, err := tempReq.ToMyRequest(req.ProgramID, importJob.ID, endpoint.ID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to convert request to database format: %v", err)
 		}

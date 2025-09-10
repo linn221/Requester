@@ -71,6 +71,16 @@ func (g *GormTxAdapter) CreateInBatches(value interface{}, batchSize int) Query 
 	return &GormQueryAdapter{db: g.db.CreateInBatches(value, batchSize)}
 }
 
+// Model specifies the model you would like to run db operations
+func (g *GormTxAdapter) Model(value interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Model(value)}
+}
+
+// Delete deletes records
+func (g *GormTxAdapter) Delete(value interface{}, conds ...interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Delete(value, conds...)}
+}
+
 // Commit commits the transaction
 func (g *GormTxAdapter) Commit() Query {
 	return &GormQueryAdapter{db: g.db.Commit()}
@@ -144,4 +154,14 @@ func (g *GormQueryAdapter) Group(query string) Query {
 // Where adds a WHERE clause
 func (g *GormQueryAdapter) Where(query interface{}, args ...interface{}) Query {
 	return &GormQueryAdapter{db: g.db.Where(query, args...)}
+}
+
+// Updates updates records
+func (g *GormQueryAdapter) Updates(values interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Updates(values)}
+}
+
+// Delete deletes records
+func (g *GormQueryAdapter) Delete(value interface{}, conds ...interface{}) Query {
+	return &GormQueryAdapter{db: g.db.Delete(value, conds...)}
 }
