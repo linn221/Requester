@@ -1,0 +1,365 @@
+package templates
+
+import (
+	"fmt"
+	"linn221/Requester/requests"
+	"strconv"
+	"time"
+)
+
+// Requests list page (full page with layout)
+templ RequestsListPage(requestsList []requests.MyRequest, filterState FilterState, pageTitle string, endpoints []requests.Endpoint) {
+	@LayoutWithNav("Requests - "+pageTitle, RequestsList(requestsList, filterState, pageTitle, endpoints), "requests")
+}
+
+// Requests list component (HTMX target)
+templ RequestsList(requestsList []requests.MyRequest, filterState FilterState, pageTitle string, endpoints []requests.Endpoint) {
+	<div class="space-y-6">
+		<!-- Page Header -->
+		<div class="flex justify-between items-center">
+			<div>
+				<h1 class="text-2xl font-bold text-gray-900">{ pageTitle }</h1>
+				<p class="text-sm text-gray-600 mt-1">{ strconv.Itoa(len(requestsList)) } requests found</p>
+			</div>
+		</div>
+
+		<!-- Filters -->
+		@RequestFilters(filterState, endpoints, []requests.Program{})
+
+		<!-- Requests Table -->
+		<div class="bg-white shadow overflow-hidden sm:rounded-md">
+			if len(requestsList) == 0 {
+				<div class="text-center py-12">
+					<svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+					</svg>
+					<h3 class="mt-2 text-sm font-medium text-gray-900">No requests found</h3>
+					<p class="mt-1 text-sm text-gray-500">Try adjusting your filters or import some HAR files.</p>
+				</div>
+			} else {
+				<ul class="divide-y divide-gray-200">
+					for _, request := range requestsList {
+						@RequestListItem(request)
+					}
+				</ul>
+			}
+		</div>
+	</div>
+}
+
+// Individual request list item
+templ RequestListItem(request requests.MyRequest) {
+	<li class="hover:bg-gray-50">
+		<a 
+			href={ templ.SafeURL(fmt.Sprintf("/requests/detail/%d", request.ID)) }
+			hx-get={ fmt.Sprintf("/requests/detail/%d", request.ID) }
+			hx-target="main"
+			hx-push-url="true"
+			hx-indicator="#loading-indicator"
+			class="block px-4 py-4"
+		>
+			<div class="flex items-center justify-between">
+				<div class="flex-1 min-w-0">
+					<div class="flex items-center space-x-3">
+						<!-- HTTP Method Badge -->
+						<span class={
+							"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+							getMethodBadgeClass(request.Method)
+						}>
+							{ request.Method }
+						</span>
+
+						<!-- Status Code Badge -->
+						<span class={
+							"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+							getStatusBadgeClass(request.ResStatus)
+						}>
+							{ strconv.Itoa(request.ResStatus) }
+						</span>
+
+						<!-- URL -->
+						<div class="flex-1 min-w-0">
+							<p class="text-sm font-medium text-gray-900 truncate">
+								{ request.Domain }
+							</p>
+							<p class="text-sm text-gray-500 truncate">
+								{ request.URL }
+							</p>
+						</div>
+					</div>
+
+					<!-- Additional Info -->
+					<div class="mt-2 flex items-center text-sm text-gray-500 space-x-4">
+						<!-- Response Size -->
+						<div class="flex items-center">
+							<svg class="flex-shrink-0 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
+							</svg>
+							{ formatBytes(request.RespSize) }
+						</div>
+
+						<!-- Latency -->
+						<div class="flex items-center">
+							<svg class="flex-shrink-0 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+							</svg>
+							{ strconv.FormatInt(request.LatencyMs, 10) }ms
+						</div>
+
+						<!-- Request Time -->
+						<div class="flex items-center">
+							<svg class="flex-shrink-0 mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+							</svg>
+							{ formatTime(request.CreatedAt) }
+						</div>
+					</div>
+				</div>
+
+				<!-- Arrow Icon -->
+				<div class="flex-shrink-0">
+					<svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+						<path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+					</svg>
+				</div>
+			</div>
+		</a>
+	</li>
+}
+
+// Request detail page (full page with layout)
+templ RequestDetailPage(request requests.MyRequest) {
+	@LayoutWithNav("Request Detail", RequestDetail(request), "requests")
+}
+
+// Request detail component (HTMX target)
+templ RequestDetail(request requests.MyRequest) {
+	<div class="space-y-6">
+		<!-- Header with Back Button -->
+		<div class="flex items-center space-x-4">
+			<button
+				hx-get="/requests"
+				hx-target="main"
+				hx-push-url="true"
+				hx-indicator="#loading-indicator"
+				class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+			>
+				<svg class="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+				</svg>
+				Back to Requests
+			</button>
+			<div>
+				<h1 class="text-2xl font-bold text-gray-900">Request Detail</h1>
+				<p class="text-sm text-gray-600">ID: { strconv.FormatUint(uint64(request.ID), 10) }</p>
+			</div>
+		</div>
+
+		<!-- Request Overview -->
+		<div class="bg-white shadow rounded-lg">
+			<div class="px-4 py-5 sm:p-6">
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+					<!-- Method & Status -->
+					<div>
+						<div class="flex items-center space-x-2 mb-2">
+							<span class={
+								"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+								getMethodBadgeClass(request.Method)
+							}>
+								{ request.Method }
+							</span>
+							<span class={
+								"inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium",
+								getStatusBadgeClass(request.ResStatus)
+							}>
+								{ strconv.Itoa(request.ResStatus) }
+							</span>
+						</div>
+						<p class="text-sm text-gray-500">Method & Status</p>
+					</div>
+
+					<!-- Response Size -->
+					<div>
+						<p class="text-lg font-semibold text-gray-900">{ formatBytes(request.RespSize) }</p>
+						<p class="text-sm text-gray-500">Response Size</p>
+					</div>
+
+					<!-- Latency -->
+					<div>
+						<p class="text-lg font-semibold text-gray-900">{ strconv.FormatInt(request.LatencyMs, 10) }ms</p>
+						<p class="text-sm text-gray-500">Latency</p>
+					</div>
+
+					<!-- Timestamp -->
+					<div>
+						<p class="text-lg font-semibold text-gray-900">{ formatTime(request.CreatedAt) }</p>
+						<p class="text-sm text-gray-500">Request Time</p>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- URL Section -->
+		<div class="bg-white shadow rounded-lg">
+			<div class="px-4 py-5 sm:p-6">
+				<h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Request URL</h3>
+				<div class="bg-gray-50 rounded-md p-4">
+					<p class="text-sm font-mono break-all">{ request.URL }</p>
+				</div>
+				<div class="mt-2 text-sm text-gray-500">
+					<p><strong>Domain:</strong> { request.Domain }</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Request & Response Tabs -->
+		<div x-data="{ activeTab: 'request' }" class="bg-white shadow rounded-lg">
+			<!-- Tab Navigation -->
+			<div class="border-b border-gray-200">
+				<nav class="-mb-px flex">
+					<button
+						@click="activeTab = 'request'"
+						:class="{'border-blue-500 text-blue-600': activeTab === 'request', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'request'}"
+						class="py-2 px-4 border-b-2 font-medium text-sm focus:outline-none"
+					>
+						Request Details
+					</button>
+					<button
+						@click="activeTab = 'response'"
+						:class="{'border-blue-500 text-blue-600': activeTab === 'response', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': activeTab !== 'response'}"
+						class="py-2 px-4 border-b-2 font-medium text-sm focus:outline-none"
+					>
+						Response Details
+					</button>
+				</nav>
+			</div>
+
+			<!-- Tab Content -->
+			<div class="px-4 py-5 sm:p-6">
+				<!-- Request Tab -->
+				<div x-show="activeTab === 'request'" x-transition>
+					@RequestDetailsTab(request)
+				</div>
+
+				<!-- Response Tab -->
+				<div x-show="activeTab === 'response'" x-transition>
+					@ResponseDetailsTab(request)
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// Request details tab content
+templ RequestDetailsTab(request requests.MyRequest) {
+	<div class="space-y-6">
+		<!-- Request Headers -->
+		<div>
+			<h4 class="text-md font-medium text-gray-900 mb-3">Request Headers</h4>
+			@HeadersDisplay(request.ReqHeaders)
+		</div>
+
+		<!-- Request Body -->
+		if request.ReqBody != "" {
+			<div>
+				<h4 class="text-md font-medium text-gray-900 mb-3">Request Body</h4>
+				@BodyDisplay(request.ReqBody, "request")
+			</div>
+		}
+	</div>
+}
+
+// Response details tab content
+templ ResponseDetailsTab(request requests.MyRequest) {
+	<div class="space-y-6">
+		<!-- Response Headers -->
+		<div>
+			<h4 class="text-md font-medium text-gray-900 mb-3">Response Headers</h4>
+			@HeadersDisplay(request.ResHeaders)
+		</div>
+
+		<!-- Response Body -->
+		if request.ResBody != "" {
+			<div>
+				<h4 class="text-md font-medium text-gray-900 mb-3">Response Body</h4>
+				@BodyDisplay(request.ResBody, "response")
+			</div>
+		}
+	</div>
+}
+
+// Headers display component
+templ HeadersDisplay(headersJSON string) {
+	<div class="bg-gray-50 rounded-md p-4 max-h-60 overflow-auto">
+		if headersJSON != "" {
+			<pre class="text-sm font-mono whitespace-pre-wrap">{ headersJSON }</pre>
+		} else {
+			<p class="text-sm text-gray-500 italic">No headers</p>
+		}
+	</div>
+}
+
+// Body display component with syntax highlighting hint
+templ BodyDisplay(body, bodyType string) {
+	<div class="bg-gray-50 rounded-md p-4 max-h-96 overflow-auto">
+		if body != "" {
+			<pre class="text-sm font-mono whitespace-pre-wrap">{ body }</pre>
+		} else {
+			<p class="text-sm text-gray-500 italic">No { bodyType } body</p>
+		}
+	</div>
+}
+
+// Helper functions
+func getMethodBadgeClass(method string) string {
+	switch method {
+	case "GET":
+		return "bg-green-100 text-green-800"
+	case "POST":
+		return "bg-blue-100 text-blue-800"
+	case "PUT":
+		return "bg-yellow-100 text-yellow-800"
+	case "DELETE":
+		return "bg-red-100 text-red-800"
+	case "PATCH":
+		return "bg-purple-100 text-purple-800"
+	case "OPTIONS":
+		return "bg-gray-100 text-gray-800"
+	default:
+		return "bg-gray-100 text-gray-800"
+	}
+}
+
+func getStatusBadgeClass(status int) string {
+	if status >= 200 && status < 300 {
+		return "bg-green-100 text-green-800"
+	} else if status >= 300 && status < 400 {
+		return "bg-blue-100 text-blue-800"
+	} else if status >= 400 && status < 500 {
+		return "bg-yellow-100 text-yellow-800"
+	} else if status >= 500 {
+		return "bg-red-100 text-red-800"
+	}
+	return "bg-gray-100 text-gray-800"
+}
+
+func formatBytes(bytes int) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+func formatTime(timestamp int64) string {
+	if timestamp == 0 {
+		return "Unknown"
+	}
+	t := time.Unix(timestamp, 0)
+	return t.Format("Jan 2, 2006 15:04:05")
+}

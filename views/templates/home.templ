@@ -1,25 +1,189 @@
 package templates
 
-// Home page
+// Home page content
 templ HomePage() {
-	<div class="container-fluid">
-		<div class="row">
-			<div class="col-12">
-				<div class="jumbotron bg-light p-5 rounded">
-					<h1 class="display-4">Welcome to Requester</h1>
-					<p class="lead">Import and analyze HTTP requests from HAR files.</p>
-					<hr class="my-4">
-					<p>Get started by importing a HAR file to analyze your HTTP requests.</p>
-					<a class="btn btn-primary btn-lg" href="/dashboard/import" role="button">
-						<i class="bi bi-upload"></i> Import HAR File
-					</a>
+	<div class="max-w-4xl mx-auto">
+		<!-- Welcome Section -->
+		<div class="text-center mb-12">
+			<h1 class="text-4xl font-bold text-gray-900 mb-4">Welcome to Requester</h1>
+			<p class="text-xl text-gray-600 mb-8">
+				Your comprehensive HTTP request monitoring and analysis platform for bug hunting workflows.
+			</p>
+		</div>
+
+		<!-- Quick Stats -->
+		<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+			<div class="bg-white rounded-lg shadow p-6 text-center">
+				<div class="text-2xl font-bold text-blue-600 mb-2">TODO</div>
+				<div class="text-sm text-gray-600">Total Requests</div>
+			</div>
+			<div class="bg-white rounded-lg shadow p-6 text-center">
+				<div class="text-2xl font-bold text-green-600 mb-2">TODO</div>
+				<div class="text-sm text-gray-600">Unique Endpoints</div>
+			</div>
+			<div class="bg-white rounded-lg shadow p-6 text-center">
+				<div class="text-2xl font-bold text-purple-600 mb-2">TODO</div>
+				<div class="text-sm text-gray-600">Programs</div>
+			</div>
+			<div class="bg-white rounded-lg shadow p-6 text-center">
+				<div class="text-2xl font-bold text-orange-600 mb-2">TODO</div>
+				<div class="text-sm text-gray-600">Import Jobs</div>
+			</div>
+		</div>
+
+		<!-- Feature Cards -->
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+			<!-- Request Analysis -->
+			<div class="bg-white rounded-lg shadow-lg p-8">
+				<div class="flex items-center mb-4">
+					<div class="bg-blue-100 rounded-lg p-3 mr-4">
+						<svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-semibold text-gray-900">Request Analysis</h3>
 				</div>
+				<p class="text-gray-600 mb-4">
+					Advanced filtering and analysis of HTTP requests with support for regex search, 
+					method filtering, status code analysis, and response size monitoring.
+				</p>
+				<a 
+					href="/requests"
+					hx-get="/requests"
+					hx-target="main"
+					hx-push-url="true"
+					hx-indicator="#loading-indicator"
+					class="text-blue-600 hover:text-blue-800 font-medium"
+				>
+					View Requests →
+				</a>
+			</div>
+
+			<!-- Endpoint Discovery -->
+			<div class="bg-white rounded-lg shadow-lg p-8">
+				<div class="flex items-center mb-4">
+					<div class="bg-green-100 rounded-lg p-3 mr-4">
+						<svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-semibold text-gray-900">Endpoint Discovery</h3>
+				</div>
+				<p class="text-gray-600 mb-4">
+					Discover and catalog unique endpoints across your target applications. 
+					Track endpoint changes and identify new attack surfaces.
+				</p>
+				<a 
+					href="/endpoints"
+					hx-get="/endpoints"
+					hx-target="main"
+					hx-push-url="true"
+					hx-indicator="#loading-indicator"
+					class="text-green-600 hover:text-green-800 font-medium"
+				>
+					View Endpoints →
+				</a>
+			</div>
+
+			<!-- HAR Import -->
+			<div class="bg-white rounded-lg shadow-lg p-8">
+				<div class="flex items-center mb-4">
+					<div class="bg-purple-100 rounded-lg p-3 mr-4">
+						<svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-semibold text-gray-900">HAR File Import</h3>
+				</div>
+				<p class="text-gray-600 mb-4">
+					Import HAR files from browser developer tools, Burp Suite, or other HTTP proxies. 
+					Automatically extract and categorize requests for analysis.
+				</p>
+				<a 
+					href="/import"
+					hx-get="/import"
+					hx-target="main"
+					hx-push-url="true"
+					hx-indicator="#loading-indicator"
+					class="text-purple-600 hover:text-purple-800 font-medium"
+				>
+					Import HAR Files →
+				</a>
+			</div>
+
+			<!-- Security Analysis -->
+			<div class="bg-white rounded-lg shadow-lg p-8">
+				<div class="flex items-center mb-4">
+					<div class="bg-orange-100 rounded-lg p-3 mr-4">
+						<svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+						</svg>
+					</div>
+					<h3 class="text-xl font-semibold text-gray-900">Security Analysis</h3>
+				</div>
+				<p class="text-gray-600 mb-4">
+					Automated entropy scanning, sensitive comment detection, and wordlist generation 
+					to identify potential security vulnerabilities and interesting data points.
+				</p>
+				<span class="text-orange-600 font-medium">Coming Soon</span>
+			</div>
+		</div>
+
+		<!-- Quick Actions -->
+		<div class="bg-white rounded-lg shadow-lg p-8">
+			<h3 class="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h3>
+			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+				<a 
+					href="/import"
+					hx-get="/import"
+					hx-target="main"
+					hx-push-url="true"
+					hx-indicator="#loading-indicator"
+					class="flex items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
+				>
+					<svg class="w-8 h-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+					</svg>
+					<div>
+						<div class="font-medium text-gray-900">Import New HAR</div>
+						<div class="text-sm text-gray-500">Upload and analyze HTTP requests</div>
+					</div>
+				</a>
+
+				<a 
+					href="/programs/create"
+					hx-get="/programs/create"
+					hx-target="main"
+					hx-push-url="true"
+					hx-indicator="#loading-indicator"
+					class="flex items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors"
+				>
+					<svg class="w-8 h-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+					</svg>
+					<div>
+						<div class="font-medium text-gray-900">Create Program</div>
+						<div class="text-sm text-gray-500">Set up a new bug hunting target</div>
+					</div>
+				</a>
+
+				<a 
+					href="/requests"
+					hx-get="/requests"
+					hx-target="main"
+					hx-push-url="true"
+					hx-indicator="#loading-indicator"
+					class="flex items-center p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-colors"
+				>
+					<svg class="w-8 h-8 text-gray-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+					</svg>
+					<div>
+						<div class="font-medium text-gray-900">Search Requests</div>
+						<div class="text-sm text-gray-500">Find specific HTTP requests</div>
+					</div>
+				</a>
 			</div>
 		</div>
 	</div>
-}
-
-// Home page with layout
-templ HomePageWithLayout() {
-	@LayoutWithNav("Home - App", HomePage(), "home")
 }

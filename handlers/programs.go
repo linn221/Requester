@@ -45,10 +45,10 @@ func (h *ProgramsHandler) HandleProgramCreate(w http.ResponseWriter, r *http.Req
 	// Check if it's an HTMX request
 	if r.Header.Get("HX-Request") == "true" {
 		// HTMX request - return just the form
-		return templates.ProgramForm(nil).Render(r.Context(), w)
+		return templates.ProgramForm(requests.Program{}, false).Render(r.Context(), w)
 	} else {
 		// Direct visit - return full page with layout
-		return templates.ProgramFormPage(nil).Render(r.Context(), w)
+		return templates.ProgramFormPage(requests.Program{}, false).Render(r.Context(), w)
 	}
 }
 
@@ -101,10 +101,10 @@ func (h *ProgramsHandler) HandleProgramEdit(w http.ResponseWriter, r *http.Reque
 	// Check if it's an HTMX request
 	if r.Header.Get("HX-Request") == "true" {
 		// HTMX request - return just the form
-		return templates.ProgramForm(program).Render(r.Context(), w)
+		return templates.ProgramForm(*program, true).Render(r.Context(), w)
 	} else {
 		// Direct visit - return full page with layout
-		return templates.ProgramFormPage(program).Render(r.Context(), w)
+		return templates.ProgramFormPage(*program, true).Render(r.Context(), w)
 	}
 }
 

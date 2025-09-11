@@ -1,0 +1,43 @@
+{
+  "project": "Go + Templ + Alpine.js + HTMX + GORM",
+  "goals": [
+    "Keep records of HTTP requests",
+    "Analyze with entropy scanning, sensitive comment detection, wordlist generation, daily endpoint change detection",
+    "Maintain clean code and clarity of design",
+    "Prefer server-side rendering (SSR) with Templ over JavaScript"
+  ],
+  "workflow": {
+    "templ": "Always regenerate Templ files whenever a template is changed",
+    "binary": "Always build the Go binary once a coding task is finished"
+  },
+  "technology": {
+    "templ": {
+      "rule": "Default to Templ for UI rendering",
+      "priority": "Preferred layer over JavaScript"
+    },
+    "htmx": {
+      "rule": "Prefer HTMX for fetching, interactivity, and UI updates",
+      "patterns": "Follow HTMX official examples at https://htmx.org/examples/",
+      "note": "Use HTMX patterns whenever convenient"
+    },
+    "alpine": {
+      "rule": "Use Alpine.js inline styles instead of <script> tags",
+      "note": "Only for lightweight, unavoidable interactivity"
+    },
+    "javascript": {
+      "rule": "Avoid JavaScript unless absolutely necessary",
+      "restriction": "No front-end frameworks beyond HTMX + Alpine"
+    }
+  },
+  "ui": {
+    "action_buttons": "Place on the right side",
+    "search_bar": "Full width",
+    "text_suggestions": "Behave like Google Search autocomplete",
+    "style": "Minimal, clean, and functional"
+  },
+  "general_rules": [
+    "Do not refactor the User Interface unless explicitly asked",
+    "Always follow clean code principles",
+    "Always prioritize server-side rendering"
+  ]
+}

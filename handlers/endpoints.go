@@ -53,8 +53,8 @@ func (h *EndpointsHandler) HandleEndpointDetail(w http.ResponseWriter, r *http.R
 		return err
 	}
 
-	// Fetch endpoint statistics
-	stats, err := h.services.EndpointService.GetEndpointStats(r.Context(), uint(id))
+	// Fetch endpoint statistics (TODO: Use stats in template)
+	_, err = h.services.EndpointService.GetEndpointStats(r.Context(), uint(id))
 	if err != nil {
 		return err
 	}
@@ -62,9 +62,9 @@ func (h *EndpointsHandler) HandleEndpointDetail(w http.ResponseWriter, r *http.R
 	// Check if it's an HTMX request
 	if r.Header.Get("HX-Request") == "true" {
 		// HTMX request - return just the content
-		return templates.EndpointDetail(*endpoint, stats).Render(r.Context(), w)
+		return templates.EndpointDetail(*endpoint).Render(r.Context(), w)
 	} else {
 		// Direct visit - return full page with layout
-		return templates.EndpointDetailPage(*endpoint, stats).Render(r.Context(), w)
+		return templates.EndpointDetailPage(*endpoint).Render(r.Context(), w)
 	}
 }

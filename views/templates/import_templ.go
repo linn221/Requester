@@ -8,10 +8,12 @@ package templates
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "linn221/Requester/requests"
-import "strconv"
+import (
+	"fmt"
+	"linn221/Requester/requests"
+)
 
-// Import form page
+// Import form page (full page with layout)
 func ImportFormPage(programs []requests.Program) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -33,7 +35,7 @@ func ImportFormPage(programs []requests.Program) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = LayoutWithNav("Import HAR - App", ImportForm(programs), "import").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = LayoutWithNav("Import HAR Files", ImportForm(programs), "import").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -41,7 +43,7 @@ func ImportFormPage(programs []requests.Program) templ.Component {
 	})
 }
 
-// Import form component
+// Import form component (HTMX target)
 func ImportForm(programs []requests.Program) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -63,7 +65,7 @@ func ImportForm(programs []requests.Program) templ.Component {
 			templ_7745c5c3_Var2 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"container-fluid\"><div class=\"row justify-content-center\"><div class=\"col-md-8 col-lg-6\"><div class=\"card\"><div class=\"card-header\"><h4 class=\"mb-0\">Import HAR File</h4></div><div class=\"card-body\"><form hx-post=\"/dashboard/import\" hx-target=\"#main\" hx-swap=\"innerHTML\" enctype=\"multipart/form-data\"><div class=\"mb-3\"><label for=\"program_id\" class=\"form-label\">Program <span class=\"text-danger\">*</span></label> <select class=\"form-select\" id=\"program_id\" name=\"program_id\" required><option value=\"\">Select a program...</option> ")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<div class=\"max-w-2xl mx-auto\"><div class=\"bg-white shadow rounded-lg\"><div class=\"px-4 py-5 sm:p-6\"><h3 class=\"text-lg leading-6 font-medium text-gray-900 mb-6\">Import HAR File</h3><form hx-post=\"/import\" hx-target=\"main\" hx-push-url=\"true\" hx-indicator=\"#loading-indicator\" enctype=\"multipart/form-data\" class=\"space-y-6\"><!-- Program Selection --><div><label for=\"program_id\" class=\"block text-sm font-medium text-gray-700 mb-2\">Select Program</label> <select id=\"program_id\" name=\"program_id\" required class=\"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500\"><option value=\"\">Choose a program...</option> ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -73,9 +75,9 @@ func ImportForm(programs []requests.Program) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.FormatUint(uint64(program.ID), 10))
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(templ.EscapeString(fmt.Sprintf("%d", program.ID)))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 27, Col: 68}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 41, Col: 73}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -88,7 +90,7 @@ func ImportForm(programs []requests.Program) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(program.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 27, Col: 85}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 42, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -99,7 +101,7 @@ func ImportForm(programs []requests.Program) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</select><div class=\"form-text\">Select the program this import belongs to</div></div><div class=\"mb-3\"><label for=\"title\" class=\"form-label\">Import Title</label> <input type=\"text\" class=\"form-control\" id=\"title\" name=\"title\" required placeholder=\"Enter a title for this import\"></div><div class=\"mb-3\"><label for=\"harfile\" class=\"form-label\">HAR File</label> <input type=\"file\" class=\"form-control\" id=\"harfile\" name=\"harfile\" accept=\".har\" required><div class=\"form-text\">Select a .har file to import</div></div><div class=\"mb-3\"><label for=\"ignoredHeaders\" class=\"form-label\">Ignored Headers (optional)</label> <textarea class=\"form-control\" id=\"ignoredHeaders\" name=\"ignoredHeaders\" rows=\"3\" placeholder=\"Enter headers to ignore during import, one per line or space-separated\"></textarea><div class=\"form-text\">Headers to ignore when calculating request/response hashes</div></div><div class=\"d-grid\"><button type=\"submit\" class=\"btn btn-primary\"><i class=\"bi bi-upload\"></i> Import HAR File</button></div></form></div></div></div></div></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</select><p class=\"mt-2 text-sm text-gray-500\">Select the program/target this HAR file belongs to.</p></div><!-- Import Title --><div><label for=\"title\" class=\"block text-sm font-medium text-gray-700 mb-2\">Import Title</label> <input type=\"text\" id=\"title\" name=\"title\" required placeholder=\"e.g., Login flow analysis, API endpoint discovery\" class=\"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500\"><p class=\"mt-2 text-sm text-gray-500\">Give this import session a descriptive name.</p></div><!-- HAR File Upload --><div><label for=\"har_file\" class=\"block text-sm font-medium text-gray-700 mb-2\">HAR File</label><div class=\"mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-gray-400 transition-colors\"><div class=\"space-y-1 text-center\"><svg class=\"mx-auto h-12 w-12 text-gray-400\" stroke=\"currentColor\" fill=\"none\" viewBox=\"0 0 48 48\"><path d=\"M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"></path></svg><div class=\"flex text-sm text-gray-600\"><label for=\"har_file\" class=\"relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500\"><span>Upload a HAR file</span> <input id=\"har_file\" name=\"har_file\" type=\"file\" accept=\".har,.json\" required class=\"sr-only\"></label><p class=\"pl-1\">or drag and drop</p></div><p class=\"text-xs text-gray-500\">HAR or JSON files up to 100MB</p></div></div></div><!-- Ignored Headers --><div><label for=\"ignored_headers\" class=\"block text-sm font-medium text-gray-700 mb-2\">Ignored Headers (Optional)</label> <textarea id=\"ignored_headers\" name=\"ignored_headers\" rows=\"3\" placeholder=\"user-agent&#10;accept-encoding&#10;cache-control\" class=\"w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500\"></textarea><p class=\"mt-2 text-sm text-gray-500\">List headers to ignore during import (one per line). These headers won't be stored or analyzed.</p></div><!-- Submit Button --><div class=\"flex justify-end\"><button type=\"submit\" class=\"inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed\"><svg class=\"htmx-indicator animate-spin -ml-1 mr-3 h-4 w-4 text-white\" xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\"><circle class=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" stroke-width=\"4\"></circle> <path class=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z\"></path></svg> Import HAR File</button></div></form></div></div><!-- Help Section --><div class=\"mt-8 bg-blue-50 border border-blue-200 rounded-md p-4\"><div class=\"flex\"><div class=\"flex-shrink-0\"><svg class=\"h-5 w-5 text-blue-400\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 20\" fill=\"currentColor\"><path fill-rule=\"evenodd\" d=\"M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z\" clip-rule=\"evenodd\"></path></svg></div><div class=\"ml-3\"><h3 class=\"text-sm font-medium text-blue-800\">How to get HAR files</h3><div class=\"mt-2 text-sm text-blue-700\"><ul class=\"list-disc list-inside space-y-1\"><li><strong>Browser:</strong> Open Developer Tools → Network tab → Perform actions → Right-click → \"Save all as HAR\"</li><li><strong>Burp Suite:</strong> Proxy → HTTP history → Select requests → Right-click → \"Save selected items\"</li><li><strong>OWASP ZAP:</strong> History tab → Right-click → \"Export Messages to File\" → Choose HAR format</li></ul></div></div></div></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -107,8 +109,8 @@ func ImportForm(programs []requests.Program) templ.Component {
 	})
 }
 
-// Import result page
-func ImportResultPage(title string, totalRequests int, uniqueDomains int, summary string, importJobId uint) templ.Component {
+// Import result page (full page with layout)
+func ImportResultPage(title string, requestCount int, uniqueDomains int, summary ImportSummary, importJobID uint) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -129,7 +131,7 @@ func ImportResultPage(title string, totalRequests int, uniqueDomains int, summar
 			templ_7745c5c3_Var5 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = LayoutWithNav("Import Result - App", ImportResult(title, totalRequests, uniqueDomains, summary, importJobId), "import").Render(ctx, templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = LayoutWithNav("Import Complete", ImportResult(title, requestCount, uniqueDomains, summary, importJobID), "import").Render(ctx, templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -137,8 +139,8 @@ func ImportResultPage(title string, totalRequests int, uniqueDomains int, summar
 	})
 }
 
-// Import result component
-func ImportResult(title string, totalRequests int, uniqueDomains int, summary string, importJobId uint) templ.Component {
+// Import result component (HTMX target)
+func ImportResult(title string, requestCount int, uniqueDomains int, summary ImportSummary, importJobID uint) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -159,72 +161,185 @@ func ImportResult(title string, totalRequests int, uniqueDomains int, summary st
 			templ_7745c5c3_Var6 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"container-fluid\"><div class=\"row justify-content-center\"><div class=\"col-md-10 col-lg-8\"><div class=\"card\"><div class=\"card-header\"><h4 class=\"mb-0\">Import Complete</h4></div><div class=\"card-body\"><div class=\"alert alert-success\"><i class=\"bi bi-check-circle\"></i> <strong>Success!</strong> HAR file imported successfully.</div><div class=\"row mb-4\"><div class=\"col-md-4\"><div class=\"text-center\"><div class=\"h3 text-primary\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"max-w-4xl mx-auto\"><!-- Success Message -->")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = SuccessBox("HAR file imported successfully!").Render(ctx, templ_7745c5c3_Buffer)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<!-- Import Summary --><div class=\"bg-white shadow rounded-lg mb-6\"><div class=\"px-4 py-5 sm:p-6\"><h3 class=\"text-lg leading-6 font-medium text-gray-900 mb-4\">Import Summary: ")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
-		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(totalRequests))
+		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 82, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 169, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div><div class=\"text-muted\">Total Requests</div></div></div><div class=\"col-md-4\"><div class=\"text-center\"><div class=\"h3 text-success\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</h3><!-- Stats Grid --><div class=\"grid grid-cols-1 md:grid-cols-3 gap-6 mb-6\"><div class=\"text-center\"><div class=\"text-2xl font-bold text-blue-600\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
-		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(uniqueDomains))
+		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", requestCount))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 88, Col: 67}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 174, Col: 85}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div><div class=\"text-muted\">Unique Domains</div></div></div><div class=\"col-md-4\"><div class=\"text-center\"><div class=\"h3 text-info\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><div class=\"text-sm text-gray-600\">Total Requests</div></div><div class=\"text-center\"><div class=\"text-2xl font-bold text-green-600\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var9 string
-		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", summary.UniqueEndpoints))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 94, Col: 42}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 178, Col: 97}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</div><div class=\"text-muted\">Import Title</div></div></div></div><div class=\"mb-4\"><h5>Summary</h5><pre class=\"bg-light p-3 rounded\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div><div class=\"text-sm text-gray-600\">Unique Endpoints</div></div><div class=\"text-center\"><div class=\"text-2xl font-bold text-purple-600\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 string
-		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(summary)
+		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", uniqueDomains))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 102, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 182, Col: 88}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</pre></div><div class=\"d-grid gap-2 d-md-flex justify-content-md-end\"><a href=\"/dashboard/import\" class=\"btn btn-outline-secondary\"><i class=\"bi bi-arrow-left\"></i> Import Another</a> <a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "</div><div class=\"text-sm text-gray-600\">Unique Domains</div></div></div><!-- Method Breakdown -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var11 templ.SafeURL
-		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs("/dashboard/requests/" + strconv.FormatUint(uint64(importJobId), 10))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 109, Col: 85}
+		if len(summary.Methods) > 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<div class=\"mb-6\"><h4 class=\"text-md font-medium text-gray-900 mb-3\">HTTP Methods</h4><div class=\"grid grid-cols-2 md:grid-cols-4 gap-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for method, count := range summary.Methods {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<div class=\"bg-gray-50 rounded-lg p-3 text-center\"><div class=\"text-lg font-semibold text-gray-900\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var11 string
+				templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", count))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 194, Col: 84}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "</div><div class=\"text-sm text-gray-600\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var12 string
+				templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(method)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 195, Col: 52}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "</div></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "</div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<!-- Status Code Breakdown -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" class=\"btn btn-primary\"><i class=\"bi bi-list-ul\"></i> View Requests</a></div></div></div></div></div></div>")
+		if len(summary.StatusCodes) > 0 {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 18, "<div class=\"mb-6\"><h4 class=\"text-md font-medium text-gray-900 mb-3\">Status Codes</h4><div class=\"grid grid-cols-2 md:grid-cols-4 gap-4\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			for status, count := range summary.StatusCodes {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 19, "<div class=\"bg-gray-50 rounded-lg p-3 text-center\"><div class=\"text-lg font-semibold text-gray-900\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var13 string
+				templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("%d", count))
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 209, Col: 84}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 20, "</div><div class=\"text-sm text-gray-600\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var14 string
+				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.JoinStringErrs(status)
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 210, Col: 52}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var14))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 21, "</div></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 22, "</div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 23, "</div></div><!-- Action Buttons --><div class=\"flex justify-center space-x-4\"><a href=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var15 templ.SafeURL
+		templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(fmt.Sprintf("/requests?import_job_id=%d", importJobID)))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 222, Col: 80}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var15))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 24, "\" hx-get=\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var16 string
+		templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(fmt.Sprintf("/requests?import_job_id=%d", importJobID))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/templates/import.templ`, Line: 223, Col: 67}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 25, "\" hx-target=\"main\" hx-push-url=\"true\" hx-indicator=\"#loading-indicator\" class=\"inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500\">View Imported Requests</a> <a href=\"/import\" hx-get=\"/import\" hx-target=\"main\" hx-push-url=\"true\" hx-indicator=\"#loading-indicator\" class=\"inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500\">Import Another File</a></div></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

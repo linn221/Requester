@@ -1,0 +1,393 @@
+package templates
+
+import (
+	"fmt"
+	"linn221/Requester/requests"
+	"strconv"
+)
+
+// Filter form component for requests
+templ RequestFilters(filterState FilterState, endpoints []requests.Endpoint, programs []requests.Program) {
+	<div class="bg-white rounded-lg shadow p-6 mb-6" x-data="{ showAdvanced: false }">
+		<form hx-get="/requests" hx-target="main" hx-push-url="true" hx-indicator="#loading-indicator">
+			<!-- Search Bar (Full Width) -->
+			<div class="mb-4">
+				<label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Requests</label>
+				<input
+					type="text"
+					id="search"
+					name="search"
+					value={ filterState.Search }
+					placeholder="Search by URL, headers, body content (regex supported)..."
+					class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+					hx-trigger="input changed delay:500ms, search"
+					hx-get="/requests"
+					hx-target="main"
+					hx-push-url="true"
+				/>
+			</div>
+
+			<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+				<!-- Program Filter -->
+				<div>
+					<label for="program_id" class="block text-sm font-medium text-gray-700 mb-1">Program</label>
+					<select id="program_id" name="program_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+						<option value="">All Programs</option>
+						for _, program := range programs {
+							<option value={ strconv.Itoa(int(program.ID)) }>{ program.Name }</option>
+						}
+					</select>
+				</div>
+
+				<!-- HTTP Method Filter -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">HTTP Methods</label>
+					<div class="space-y-1">
+						@MethodCheckbox("GET", filterState.Methods)
+						@MethodCheckbox("POST", filterState.Methods)
+						@MethodCheckbox("PUT", filterState.Methods)
+						@MethodCheckbox("DELETE", filterState.Methods)
+						@MethodCheckbox("PATCH", filterState.Methods)
+						@MethodCheckbox("OPTIONS", filterState.Methods)
+					</div>
+				</div>
+
+				<!-- Status Code Filter -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Status Codes</label>
+					<div class="space-y-1">
+						@StatusCheckbox("2xx", filterState.Statuses)
+						@StatusCheckbox("3xx", filterState.Statuses)
+						@StatusCheckbox("4xx", filterState.Statuses)
+						@StatusCheckbox("5xx", filterState.Statuses)
+					</div>
+				</div>
+
+				<!-- Size Filter -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Response Size</label>
+					<div class="space-y-2">
+						<input
+							type="number"
+							name="size_min"
+							value={ filterState.SizeMin }
+							placeholder="Min bytes"
+							class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+						/>
+						<input
+							type="number"
+							name="size_max"
+							value={ filterState.SizeMax }
+							placeholder="Max bytes"
+							class="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-blue-500 focus:border-blue-500"
+						/>
+					</div>
+				</div>
+			</div>
+
+			<!-- Endpoint Filter with Text Suggestions -->
+			<div class="mb-4">
+				<label class="block text-sm font-medium text-gray-700 mb-2">Endpoints</label>
+				@EndpointSelector(endpoints, filterState.EndpointIDs)
+			</div>
+
+			<!-- Advanced Filters Toggle -->
+			<div class="mb-4">
+				<button type="button" @click="showAdvanced = !showAdvanced" class="text-sm text-blue-600 hover:text-blue-800">
+					<span x-text="showAdvanced ? 'Hide Advanced Filters' : 'Show Advanced Filters'"></span>
+				</button>
+			</div>
+
+			<!-- Advanced Filters -->
+			<div x-show="showAdvanced" x-transition class="space-y-4 mb-4">
+				<!-- Content Type Filter -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-1">Content Types</label>
+					<div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+						@ContentTypeCheckbox("application/json", filterState.Types)
+						@ContentTypeCheckbox("text/html", filterState.Types)
+						@ContentTypeCheckbox("application/xml", filterState.Types)
+						@ContentTypeCheckbox("text/plain", filterState.Types)
+						@ContentTypeCheckbox("application/form", filterState.Types)
+						@ContentTypeCheckbox("multipart/form", filterState.Types)
+					</div>
+				</div>
+
+				<!-- Sorting Options -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						for i := 0; i < 2; i++ {
+							<div class="flex space-x-2">
+								<select name={ fmt.Sprintf("order_%d", i) } class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+									<option value="">Select field</option>
+									@SortOption("created_at", "Created Date", filterState.Orders, i)
+									@SortOption("method", "HTTP Method", filterState.Orders, i)
+									@SortOption("domain", "Domain", filterState.Orders, i)
+									@SortOption("res_status", "Status Code", filterState.Orders, i)
+									@SortOption("resp_size", "Response Size", filterState.Orders, i)
+									@SortOption("latency_ms", "Latency", filterState.Orders, i)
+								</select>
+								<select name={ fmt.Sprintf("direction_%d", i) } class="px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
+									if len(filterState.Orders) > i && filterState.Orders[i].Direction == "ASC" {
+										<option value="ASC" selected>Ascending</option>
+										<option value="DESC">Descending</option>
+									} else {
+										<option value="ASC">Ascending</option>
+										<option value="DESC" selected>Descending</option>
+									}
+								</select>
+							</div>
+						}
+					</div>
+				</div>
+			</div>
+
+			<!-- Action Buttons (Right Side) -->
+			<div class="flex justify-end space-x-3">
+				<button
+					type="button"
+					onclick="this.form.reset(); htmx.trigger(this.form, 'submit')"
+					class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+				>
+					Clear Filters
+				</button>
+				<button
+					type="submit"
+					class="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+				>
+					Apply Filters
+				</button>
+			</div>
+		</form>
+	</div>
+}
+
+// Method checkbox component
+templ MethodCheckbox(method string, selectedMethods []string) {
+	<label class="flex items-center">
+		<input
+			type="checkbox"
+			name="methods[]"
+			value={ method }
+			checked?={ contains(selectedMethods, method) }
+			class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+		/>
+		<span class="ml-2 text-sm text-gray-700">{ method }</span>
+	</label>
+}
+
+// Status checkbox component
+templ StatusCheckbox(status string, selectedStatuses []string) {
+	<label class="flex items-center">
+		<input
+			type="checkbox"
+			name="statuses[]"
+			value={ status }
+			checked?={ contains(selectedStatuses, status) }
+			class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+		/>
+		<span class="ml-2 text-sm text-gray-700">{ status }</span>
+	</label>
+}
+
+// Content type checkbox component
+templ ContentTypeCheckbox(contentType string, selectedTypes []string) {
+	<label class="flex items-center">
+		<input
+			type="checkbox"
+			name="types[]"
+			value={ contentType }
+			checked?={ contains(selectedTypes, contentType) }
+			class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+		/>
+		<span class="ml-2 text-sm text-gray-700">{ contentType }</span>
+	</label>
+}
+
+// Sort option component
+templ SortOption(value, label string, orders []OrderClause, index int) {
+	if len(orders) > index && orders[index].Column == value {
+		<option value={ value } selected>{ label }</option>
+	} else {
+		<option value={ value }>{ label }</option>
+	}
+}
+
+// Endpoint selector with text suggestions (Google-like autocomplete)
+templ EndpointSelector(endpoints []requests.Endpoint, selectedEndpointIDs []string) {
+	<div x-data="endpointSelector()" x-init="init()">
+		<!-- Search input -->
+		<div class="relative">
+			<input
+				type="text"
+				x-model="searchTerm"
+				@input="filterEndpoints()"
+				@focus="showDropdown = true"
+				@keydown.escape="showDropdown = false"
+				@keydown.arrow-down.prevent="navigateDown()"
+				@keydown.arrow-up.prevent="navigateUp()"
+				@keydown.enter.prevent="selectHighlighted()"
+				placeholder="Type to search endpoints..."
+				class="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+			/>
+			
+			<!-- Dropdown suggestions -->
+			<div x-show="showDropdown && filteredEndpoints.length > 0" 
+				 x-transition:enter="transition ease-out duration-100"
+				 x-transition:enter-start="transform opacity-0 scale-95"
+				 x-transition:enter-end="transform opacity-100 scale-100"
+				 x-transition:leave="transition ease-in duration-75"
+				 x-transition:leave-start="transform opacity-100 scale-100"
+				 x-transition:leave-end="transform opacity-0 scale-95"
+				 class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+				<template x-for="(endpoint, index) in filteredEndpoints" :key="endpoint.id">
+					<div @click="selectEndpoint(endpoint)"
+						 :class="{'bg-blue-50': index === highlightedIndex}"
+						 class="px-4 py-2 cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+						<div class="flex items-center justify-between">
+							<div>
+								<span class="font-medium text-sm" :class="getMethodColor(endpoint.method)" x-text="endpoint.method"></span>
+								<span class="text-sm text-gray-600 ml-2" x-text="endpoint.domain + endpoint.uri"></span>
+							</div>
+							<div class="text-xs text-gray-400" x-text="endpoint.type"></div>
+						</div>
+					</div>
+				</template>
+			</div>
+		</div>
+
+		<!-- Selected endpoints -->
+		<div class="mt-2 space-y-1" x-show="selectedEndpoints.length > 0">
+			<template x-for="endpoint in selectedEndpoints" :key="endpoint.id">
+				<div class="flex items-center justify-between bg-blue-50 px-3 py-1 rounded">
+					<span class="text-sm">
+						<span class="font-medium" :class="getMethodColor(endpoint.method)" x-text="endpoint.method"></span>
+						<span class="text-gray-600 ml-2" x-text="endpoint.domain + endpoint.uri"></span>
+					</span>
+					<button type="button" @click="removeEndpoint(endpoint)" class="text-red-500 hover:text-red-700">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+						</svg>
+					</button>
+				</div>
+			</template>
+		</div>
+
+		<!-- Hidden inputs for form submission -->
+		<template x-for="endpoint in selectedEndpoints" :key="endpoint.id">
+			<input type="hidden" name="endpoint_ids[]" :value="endpoint.id"/>
+		</template>
+	</div>
+
+	<script>
+		function endpointSelector() {
+			return {
+				searchTerm: '',
+				showDropdown: false,
+				highlightedIndex: -1,
+				filteredEndpoints: [],
+				selectedEndpoints: [],
+				allEndpoints: [],
+
+				init() {
+					// Initialize endpoints from server data
+					this.allEndpoints = [
+						for _, endpoint := range endpoints {
+							{
+								id: { strconv.Itoa(int(endpoint.ID)) },
+								method: "{ endpoint.Method }",
+								domain: "{ endpoint.Domain }",
+								uri: "{ endpoint.URI }",
+								type: "{ string(endpoint.EndpointType) }",
+								fullPath: "{ endpoint.Method } { endpoint.Domain }{ endpoint.URI }"
+							},
+						}
+					];
+
+					// Initialize selected endpoints from filterState
+					const selectedIDs = [
+						for _, id := range selectedEndpointIDs {
+							"{ id }",
+						}
+					];
+
+					this.selectedEndpoints = this.allEndpoints.filter(ep => selectedIDs.includes(ep.id));
+					this.filterEndpoints();
+
+					// Close dropdown when clicking outside
+					document.addEventListener('click', (e) => {
+						if (!this.$el.contains(e.target)) {
+							this.showDropdown = false;
+						}
+					});
+				},
+
+				filterEndpoints() {
+					if (!this.searchTerm) {
+						this.filteredEndpoints = this.allEndpoints.filter(ep => 
+							!this.selectedEndpoints.some(selected => selected.id === ep.id)
+						).slice(0, 10);
+					} else {
+						const term = this.searchTerm.toLowerCase();
+						this.filteredEndpoints = this.allEndpoints
+							.filter(ep => 
+								!this.selectedEndpoints.some(selected => selected.id === ep.id) &&
+								ep.fullPath.toLowerCase().includes(term)
+							)
+							.slice(0, 10);
+					}
+					this.highlightedIndex = -1;
+				},
+
+				navigateDown() {
+					this.highlightedIndex = Math.min(this.highlightedIndex + 1, this.filteredEndpoints.length - 1);
+				},
+
+				navigateUp() {
+					this.highlightedIndex = Math.max(this.highlightedIndex - 1, 0);
+				},
+
+				selectHighlighted() {
+					if (this.highlightedIndex >= 0 && this.filteredEndpoints[this.highlightedIndex]) {
+						this.selectEndpoint(this.filteredEndpoints[this.highlightedIndex]);
+					}
+				},
+
+				selectEndpoint(endpoint) {
+					this.selectedEndpoints.push(endpoint);
+					this.searchTerm = '';
+					this.showDropdown = false;
+					this.filterEndpoints();
+				},
+
+				removeEndpoint(endpoint) {
+					this.selectedEndpoints = this.selectedEndpoints.filter(ep => ep.id !== endpoint.id);
+					this.filterEndpoints();
+				},
+
+				getMethodColor(method) {
+					const colors = {
+						'GET': 'text-green-600',
+						'POST': 'text-blue-600',
+						'PUT': 'text-yellow-600',
+						'DELETE': 'text-red-600',
+						'PATCH': 'text-purple-600',
+						'OPTIONS': 'text-gray-600'
+					};
+					return colors[method] || 'text-gray-600';
+				}
+			}
+		}
+	</script>
+}
+
+// Helper function to check if a slice contains a string
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}

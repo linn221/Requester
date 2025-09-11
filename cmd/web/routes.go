@@ -145,13 +145,22 @@ func handleImport(app *App, w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
+	// Create summary (TODO: Get actual stats from service)
+	summary := templates.ImportSummary{
+		TotalRequests:   result.RequestCount,
+		UniqueEndpoints: 0, // TODO: Get from service
+		UniqueDomains:   result.UniqueDomains,
+		Methods:         make(map[string]int),
+		StatusCodes:     make(map[string]int),
+	}
+
 	// Check if it's an HTMX request
 	if r.Header.Get("HX-Request") == "true" {
 		// HTMX request - return just the content
-		return templates.ImportResult(importReq.Title, result.RequestCount, result.UniqueDomains, result.Summary, result.ImportJobID).Render(r.Context(), w)
+		return templates.ImportResult(importReq.Title, result.RequestCount, result.UniqueDomains, summary, result.ImportJobID).Render(r.Context(), w)
 	} else {
 		// Direct visit - return full page with layout
-		return templates.ImportResultPage(importReq.Title, result.RequestCount, result.UniqueDomains, result.Summary, result.ImportJobID).Render(r.Context(), w)
+		return templates.ImportResultPage(importReq.Title, result.RequestCount, result.UniqueDomains, summary, result.ImportJobID).Render(r.Context(), w)
 	}
 }
 
