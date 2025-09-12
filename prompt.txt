@@ -1,0 +1,113 @@
+CRUD /notes (no PUT)
+POST /notes
+    Input
+        reference_type(programs, endpoints, requests)
+        reference_id<int>
+        value<string>
+GET /notes/:id
+    Detail response
+        id
+        value
+        created_at
+        updated_at
+GET /notes
+    ?type=(endpoint,request,program)
+    ?search=<string>
+    Listing response
+        id
+        reference_type, reference_id
+        value
+        created_at
+        updated_at
+DELETE /notes/:id (Status No Content, 204 if succeed)
+PATCH /notes/:id?value=... (status 201, no body)
+
+/attachments (POST and DELETE only)
+POST
+Input (form data)
+    reference_type(programs, endpoints, requests)
+    reference_id<int>
+    file<file>
+Output
+    id
+    filename
+    url
+DELETE (respond 204 if success)
+
+
+
+CRUD /programs
+    Input (POST /programs, PUT /programs/:id)
+        name, url, scope, domains, note
+    Listing response (/programs)
+        id, name, url
+    Detail response (/programs/:id)
+        id, name, url, scope, domains, note
+        notes(array of Note Output)
+        attachments(array of Attachment output)
+
+CRUD /endpoints
+    Input
+        domain
+        program_id
+        method(get,post,put,patch,delete,...)
+        URI
+        EndpointType(web,api)
+        Description
+
+    Listing Response
+        id, program_id, domain, URI, method, EndpointType
+    Detail Response
+        id, program_id, domain, URI, method, EndpointType
+        description
+        notes(array of Note Output)
+        attachments(array of Attachment output)
+
+GET /requests
+    Advanced filtering for requests
+    Params:
+        program_id,endpoint_id,job_id,raw_sql
+        order_by(method,content_type,size,latency,url,sequence_number),asc(true,false)
+    Listing response
+        id
+        program_id
+        endpoint_id
+        job_id
+        sequence_number<int>
+        url
+        method
+        domain
+        status_code<int>
+        search_results<[]string>
+GET /requests/:id
+    Detail response
+        id
+        program_id
+        endpoint_id
+        job_id
+        sequence_number<int>
+        url
+        method
+        domain
+        request_headers<string>
+        request_body
+        status_code<int>
+        response_body
+        response_headers
+        reqHash
+        responseHash
+        responseBodyHash
+        latency_ms<int>
+        notes(array of Note Output)
+        attachments(array of Attachment output)
+
+POST /import-har (upload .har file, respond the created import job id<number>)
+    input name is `file`
+
+GET /jobs
+    id
+    job_type(import_har,import_xml)
+    title
+    progress(number from 1 to 100)
+    created_at
+    description

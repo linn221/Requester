@@ -1,0 +1,664 @@
+openapi: 3.0.3
+info:
+  title: Bug Hunting API
+  version: "1.0.0"
+  description: API for storing and analyzing HTTP requests, notes, and attachments.
+
+servers:
+  - url: http://localhost:8080
+
+paths:
+  /start-session:
+    get:
+      summary: Start a session by providing the secret
+      security: []   # No auth required
+      parameters:
+        - name: secret
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Session started successfully, cookie set
+          headers:
+            Set-Cookie:
+              description: HttpOnly, SameSite=Strict cookie used for authentication
+              schema:
+                type: string
+        "401":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /notes:
+    post:
+      summary: Create a new note
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reference_type, reference_id, value]
+              properties:
+                reference_type:
+                  type: string
+                  enum: [programs, endpoints, requests]
+                reference_id:
+                  type: integer
+                value:
+                  type: string
+      responses:
+        "201":
+          description: Note created, returns the new note ID
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    get:
+      summary: List notes
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [endpoint, request, program]
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of notes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Note"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /notes/{id}:
+    get:
+      summary: Get note detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Note details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NoteDetail"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    delete:
+      summary: Delete a note
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Note deleted successfully
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    patch:
+      summary: Update a note's value
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: value
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: Note updated successfully, no body
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /attachments:
+    post:
+      summary: Upload an attachment
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [reference_type, reference_id, file]
+              properties:
+                reference_type:
+                  type: string
+                  enum: [programs, endpoints, requests]
+                reference_id:
+                  type: integer
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Attachment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Attachment"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    delete:
+      summary: Delete an attachment
+      parameters:
+        - name: id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Attachment deleted successfully
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /programs:
+    post:
+      summary: Create a program
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramInput"
+      responses:
+        "201":
+          description: Program created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    get:
+      summary: List programs
+      responses:
+        "200":
+          description: List of programs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProgramList"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /programs/{id}:
+    get:
+      summary: Get program detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Program details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProgramDetail"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    put:
+      summary: Update a program
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramInput"
+      responses:
+        "200":
+          description: Program updated, no body
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    delete:
+      summary: Delete a program
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Program deleted successfully
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /endpoints:
+    post:
+      summary: Create an endpoint
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EndpointInput"
+      responses:
+        "201":
+          description: Endpoint created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    get:
+      summary: List endpoints
+      responses:
+        "200":
+          description: List of endpoints
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EndpointList"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /endpoints/{id}:
+    get:
+      summary: Get endpoint detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Endpoint details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EndpointDetail"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    put:
+      summary: Update an endpoint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EndpointInput"
+      responses:
+        "200":
+          description: Endpoint updated, no body
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+    delete:
+      summary: Delete an endpoint
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Endpoint deleted successfully
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /requests:
+    get:
+      summary: List requests with filters
+      parameters:
+        - name: program_id
+          in: query
+          schema:
+            type: integer
+        - name: endpoint_id
+          in: query
+          schema:
+            type: integer
+        - name: job_id
+          in: query
+          schema:
+            type: integer
+        - name: raw_sql
+          in: query
+          schema:
+            type: string
+        - name: order_by
+          in: query
+          schema:
+            type: string
+            enum: [method, content_type, size, latency, url, sequence_number]
+        - name: asc
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: List of requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RequestList"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /requests/{id}:
+    get:
+      summary: Get request detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Request detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestDetail"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /import-har:
+    post:
+      summary: Import HAR file
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Import job created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+  /jobs:
+    get:
+      summary: List jobs
+      responses:
+        "200":
+          description: List of jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Job"
+        "4XX":
+          $ref: "#/components/responses/Error4xx"
+        "5XX":
+          $ref: "#/components/responses/Error5xx"
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session_id
+
+  responses:
+    Error4xx:
+      description: Client error
+      content:
+        text/plain:
+          schema:
+            type: string
+    Error5xx:
+      description: Server error
+      content:
+        text/plain:
+          schema:
+            type: string
+
+  schemas:
+    Note:
+      type: object
+      properties:
+        id: { type: integer }
+        reference_type: { type: string }
+        reference_id: { type: integer }
+        value: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    NoteDetail:
+      allOf:
+        - $ref: "#/components/schemas/Note"
+
+    Attachment:
+      type: object
+      properties:
+        id: { type: integer }
+        filename: { type: string }
+        url: { type: string }
+
+    ProgramInput:
+      type: object
+      properties:
+        name: { type: string }
+        url: { type: string }
+        scope: { type: string }
+        domains: { type: string }
+        note: { type: string }
+
+    ProgramList:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        url: { type: string }
+
+    ProgramDetail:
+      allOf:
+        - $ref: "#/components/schemas/ProgramInput"
+        - type: object
+          properties:
+            id: { type: integer }
+            notes:
+              type: array
+              items: { $ref: "#/components/schemas/Note" }
+            attachments:
+              type: array
+              items: { $ref: "#/components/schemas/Attachment" }
+
+    EndpointInput:
+      type: object
+      properties:
+        domain: { type: string }
+        program_id: { type: integer }
+        method:
+          type: string
+          enum: [get, post, put, patch, delete]
+        URI: { type: string }
+        EndpointType:
+          type: string
+          enum: [web, api]
+        description: { type: string }
+
+    EndpointList:
+      type: object
+      properties:
+        id: { type: integer }
+        program_id: { type: integer }
+        domain: { type: string }
+        URI: { type: string }
+        method: { type: string }
+        EndpointType: { type: string }
+
+    EndpointDetail:
+      allOf:
+        - $ref: "#/components/schemas/EndpointList"
+        - type: object
+          properties:
+            description: { type: string }
+            notes:
+              type: array
+              items: { $ref: "#/components/schemas/Note" }
+            attachments:
+              type: array
+              items: { $ref: "#/components/schemas/Attachment" }
+
+    RequestList:
+      type: object
+      properties:
+        id: { type: integer }
+        program_id: { type: integer }
+        endpoint_id: { type: integer }
+        job_id: { type: integer }
+        sequence_number: { type: integer }
+        url: { type: string }
+        method: { type: string }
+        domain: { type: string }
+        status_code: { type: integer }
+        search_results:
+          type: array
+          items: { type: string }
+
+    RequestDetail:
+      allOf:
+        - $ref: "#/components/schemas/RequestList"
+        - type: object
+          properties:
+            request_headers: { type: string }
+            request_body: { type: string }
+            response_body: { type: string }
+            response_headers: { type: string }
+            reqHash: { type: string }
+            responseHash: { type: string }
+            responseBodyHash: { type: string }
+            latency_ms: { type: integer }
+            notes:
+              type: array
+              items: { $ref: "#/components/schemas/Note" }
+            attachments:
+              type: array
+              items: { $ref: "#/components/schemas/Attachment" }
+
+    Job:
+      type: object
+      properties:
+        id: { type: integer }
+        job_type:
+          type: string
+          enum: [import_har, import_xml]
+        title: { type: string }
+        progress: { type: integer }
+        created_at: { type: string, format: date-time }
+        description: { type: string }
+
+security:
+  - sessionCookie: []
